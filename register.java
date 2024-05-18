@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class register {
@@ -26,8 +27,8 @@ public class register {
 			PrintWhiteSpace();
 			System.out.println("Choose an option from the following list:");
 			System.out.println("1 - Add an entry");
-			System.out.println("2 - List statistics");
-			System.out.println("3 - ");
+			System.out.println("2 - Lookup Data");
+			System.out.println("3 - List Transactions");
 			System.out.println("4 - ");
 			System.out.println("5 - ");
 			System.out.println("6 - ");
@@ -41,7 +42,7 @@ public class register {
 				AddEntry(file, date, userIn);
 				break;
 			case 2:
-				ListStatistics(file); //also remember to pass this the scanner, since things break otherwise...
+				LookupData(file, userIn);
 				break;
 			case 3:
 				break;
@@ -215,7 +216,7 @@ public class register {
 			System.out.println("fast food");
 			System.out.println("salary");
 			System.out.println("tips");
-			System.out.println("online order");
+			System.out.println("online");
 			System.out.println("gas");
 			System.out.println("donation");
 			System.out.println("groceries");
@@ -262,7 +263,160 @@ public class register {
 	}// end AddEntry
 
 	// LISTS VARIOUS STATISTICS ABOUT THE FILE.
-	public static void ListStatistics(File file) {
+	public static void LookupData(File file, Scanner userIn) throws FileNotFoundException {
+		//Variable declaration
+		String userInput = "";
+		String userYear = "";
+		String userMonth = "";
+		String userDescChoice = "";
+		String userSpecChoice = "";
+		Double totalSpent = 0.0;
+		Double totalEarned = 0.0;
+		int i = 0;
+		Scanner in = new Scanner(file);
+		ArrayList<String> arr = new ArrayList<>();
 		
-	}// end ListStatistics
-}// end class
+		//Ask user for a date range, then load array with data from that date range, excluding the date value from each result.
+		PrintWhiteSpace();
+		System.out.print("Would you like to specify a date range? [Yes/No]: ");
+		userInput = userIn.next();
+		userIn.nextLine();
+		if(userInput.equals("Yes")) {
+			PrintWhiteSpace();
+			System.out.print("Specify the year you would like to search (ex. 2024): ");
+			userYear = userIn.next().substring(2,4);
+			userIn.nextLine();
+			System.out.print("Specify the month you would like to search as a two-digit number (ex. May = 05) \nEnter 'No' if you do not want to specify a month: ");
+			userMonth = userIn.next();
+			userIn.nextLine();
+			if(!userMonth.equals("No")) {//if user specified a year and a month.
+				System.out.println("Searching for entries within " + userMonth + "/" + userYear);
+				while(in.hasNextLine()) {
+					if(i != 0) {
+						Scanner line = new Scanner(in.nextLine());
+						line.useDelimiter(",");
+						String date = line.next();
+						if(date.isEmpty()) {
+							break;
+						}
+						if(date.substring(6,8).equals(userYear) && date.substring(0,2).equals(userMonth)) {
+							arr.add(line.next() + " " + line.next() + " " + line.next() + " " + line.next() + " " + line.next());
+						}
+					}
+					else {
+						in.nextLine();
+					}
+					i++;
+				}//end while
+			}
+			else {//if user did not specify a month.
+				while(in.hasNextLine()) {
+					if(i != 0) {
+						Scanner line = new Scanner(in.nextLine());
+						line.useDelimiter(",");
+						String date = line.next();
+						if(date.isEmpty()) {
+							break;
+						}
+						if(date.substring(6,8).equals(userYear)) {
+							arr.add(line.next() + " " + line.next() + " " + line.next() + " " + line.next() + " " + line.next());
+						}
+					}
+					else {
+						in.nextLine();
+					}
+					i++;
+				}//end while
+			}
+		}
+		else {//if user did not specify a year or a month.
+			while(in.hasNextLine()) {
+				if(i != 0) {
+					Scanner line = new Scanner(in.nextLine());
+					line.useDelimiter(",");
+					String date = line.next();
+					if(date.isEmpty()) {
+						break;
+					}
+					arr.add(line.next() + " " + line.next() + " " + line.next() + " " + line.next() + " " + line.next());
+				}
+				else {
+					in.nextLine();
+				}
+				i++;
+			}//end while
+		}
+		in.close();
+		
+		//Close search if no results are found.
+		if(arr.size() == 0) {
+			System.out.print("No results found. Enter any key to return the main menu: ");
+			String failure = userIn.next();
+			if(!failure.isEmpty()) {
+				System.out.println("Returing to main menu.");
+			}
+			userIn.nextLine();
+			return;
+		}
+		
+		//Ask the user for search critera for that data set.
+		PrintWhiteSpace();
+		System.out.println("Data loaded. " + arr.size() + " results found.");
+		System.out.println("What description would you like to search for? Common descriptions are: ");
+		System.out.println("fast food");
+		System.out.println("salary");
+		System.out.println("tips");
+		System.out.println("online");
+		System.out.println("gas");
+		System.out.println("donation");
+		System.out.println("groceries");
+		System.out.print("Your selection: ");
+		userDescChoice = userIn.next();
+		userIn.nextLine();
+		
+		//Optional specification to add to search.
+		PrintWhiteSpace();
+		System.out.println("Is there a specification you would like to add to your search? Enter an organization's or person's name.");
+		System.out.print("Alternatively, enter No to cancel this option: ");
+		userSpecChoice = userIn.next();
+		userIn.nextLine();
+		
+		if(userSpecChoice.equals("No")) {//if user provided only a description.
+			for(int j = 0; j < arr.size(); j++) {
+				String[] line = arr.get(j).split(" ");
+				if(line[0].equals(userDescChoice)) {
+					totalSpent += Double.parseDouble(line[2]);
+					totalEarned += Double.parseDouble(line[3]);
+				}
+			}//end for loop
+			
+			//Print results of search
+			PrintWhiteSpace();
+			System.out.println("Total spent on " + userDescChoice + ": " + totalSpent);
+			System.out.println("Total earned through " + userDescChoice + ": " + totalEarned);
+		}
+		else {//if user provided only a description.
+			for(int j = 0; j < arr.size(); j++) {
+				String[] line = arr.get(j).split(" ");
+				if(line[0].equals(userDescChoice) && line[1].equals(userSpecChoice)) {
+					totalSpent += Double.parseDouble(line[2]);
+					totalEarned += Double.parseDouble(line[3]);
+				}
+			}//end for loop
+			
+			//Print results of search.
+			PrintWhiteSpace();
+			System.out.println("Total spent on " + userDescChoice + " from " + userSpecChoice + ": " + totalSpent);
+			System.out.println("Total earned through " + userDescChoice + " from " + userSpecChoice + ": " + totalEarned);
+		}
+		
+		//Allow user to view data
+		System.out.print("Results printed above. Enter any key to return the main menu: ");
+		String success = userIn.next();
+		if(!success.isEmpty()) {
+			System.out.println("Returing to main menu.");
+		}
+		userIn.nextLine();
+		return;
+	}// end LookupData
+}// end register class
