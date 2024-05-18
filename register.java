@@ -69,6 +69,7 @@ public class register {
 		System.out.println("Program terminated.");
 	}// end main
 
+	//CREATES A BACKUP OF THE FILE.
 	private static void CreateBackup(File file, Scanner userIn) throws IOException {
 		//Variable declaration
 		Scanner in = new Scanner(file);
@@ -212,7 +213,7 @@ public class register {
 			System.out.println("You are now adding an entry to the register. The current balance of this account is " + curBalance + "$.");
 
 			// Gather user data.
-			System.out.println("Please enter a description of the change. Common descriptions are: ");
+			System.out.println("Please enter a one-word description of the change. Common descriptions are: ");
 			System.out.println("fast food");
 			System.out.println("salary");
 			System.out.println("tips");
@@ -223,7 +224,7 @@ public class register {
 			System.out.print("Your selection: ");
 			description = userIn.next();
 			userIn.nextLine();
-			System.out.print("Please enter specification if applicable (ex. Burger King, Doordash,  n/a, etc.): ");
+			System.out.print("Please enter a one-word specification if applicable (ex. Burger King, Doordash,  n/a, etc.): ");
 			specification = userIn.next();
 			userIn.nextLine();
 			System.out.print("Enter how much was SPENT, 0 if none: ");
@@ -262,7 +263,7 @@ public class register {
 		} while (anotherEntry);// end outer loop
 	}// end AddEntry
 
-	// LISTS VARIOUS STATISTICS ABOUT THE FILE.
+	// SEARCHES THE FILE AND PRINTS INFORMATION REQUESTED BY THE USER.
 	public static void LookupData(File file, Scanner userIn) throws FileNotFoundException {
 		//Variable declaration
 		String userInput = "";
@@ -377,7 +378,7 @@ public class register {
 		//Optional specification to add to search.
 		PrintWhiteSpace();
 		System.out.println("Is there a specification you would like to add to your search? Enter an organization's or person's name.");
-		System.out.print("Alternatively, enter No to cancel this option: ");
+		System.out.print("Alternatively, enter No to proceed without a search specification: ");
 		userSpecChoice = userIn.next();
 		userIn.nextLine();
 		
