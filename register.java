@@ -15,12 +15,10 @@ public class register {
 		String date = time.toString();
 		date = date.substring(0, 10);// Exclude hours, minutes and seconds
 		int choice = 0;
-		String filePath = "C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses.csv";
-		File file = new File(filePath);
 		
-		//Checks that the file exists and has been established.
-		VerifyFile(file, filePath, date, userIn);
-
+		//Starts the program.
+		File file = StartProgram(date, userIn);
+		
 		// STANDARD PROGRAM LOOP
 		Boolean programRunning = true;
 		do {
@@ -28,7 +26,7 @@ public class register {
 			System.out.println("Choose an option from the following list:");
 			System.out.println("1 - Add an entry");
 			System.out.println("2 - Lookup Data");
-			System.out.println("3 - List Transactions");
+			System.out.println("3 - Load File from Navy Federal");
 			System.out.println("4 - ");
 			System.out.println("5 - ");
 			System.out.println("6 - ");
@@ -45,6 +43,7 @@ public class register {
 				LookupData(file, userIn);
 				break;
 			case 3:
+				LoadNFData(file, userIn);
 				break;
 			case 4:
 				break;
@@ -69,8 +68,116 @@ public class register {
 		System.out.println("Program terminated.");
 	}// end main
 
+	//PERFORMS STANDARD PROGRAM STARTUP. TRIGGERS VerifyFile().
+	public static File StartProgram(String date, Scanner userIn) throws IOException {
+		//Variable declaration
+		int userChoice;
+		String filePath = "";
+		String userEntry = "";
+		ArrayList<String> filePaths = new ArrayList<>();
+		File memoryFile = new File("Register Memory.txt");
+		Scanner memoryScan;
+		
+		//Welcome message
+		System.out.println("Starting up your personal register system!");
+				
+		//Verify memory text file exists, create one if not and tell the user.
+		if(memoryFile.exists() == false) {
+			memoryFile.createNewFile();
+			PrintWhiteSpace();
+			System.out.println("Created a new memory file (Register Memory.txt) at the directory in which this program is stored.");
+			System.out.println("This file will store filepaths for quick startup of this program in the future.");
+		}
+		
+		
+		//Find saved filepaths; determine which to use.
+		memoryScan = new Scanner(memoryFile);
+		if(memoryScan.hasNextLine() == false) {
+			PrintWhiteSpace();
+			System.out.println("No file path is saved in memory. Please enter a file path and name to output the document.");
+			System.out.print("(ex. C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses): ");
+			String userInFile = userIn.nextLine() + ".csv";
+			FileWriter out = new FileWriter(memoryFile, true);
+			out.write(userInFile);
+			out.close();
+			PrintWhiteSpace();
+			System.out.println("Path saved to memory file. Please reload this program to access the new path.");
+			System.exit(0);
+		}
+		
+		//Look through all lines of memory and add them to an arraylist.
+		while(memoryScan.hasNextLine()) {
+			String currLine = memoryScan.nextLine();
+			filePaths.add(currLine);
+		}
+		memoryScan.close();
+		
+		//Show available paths to user and ask them to choose one. Enter loop to refresh this selection if a new path is added.
+		PrintWhiteSpace();
+		System.out.println("Which file would you like to use? Enter the integer corresponding to your choice.");
+		for(int i = 0; i < filePaths.size(); i++) {
+			System.out.println(i+1 + ": " + filePaths.get(i));
+		}
+		System.out.println("Alternatively, add a new filepath by typing 'Add'.");
+		System.out.print("Your selection: ");
+		userEntry = userIn.next();
+		userIn.nextLine();
+		if(userEntry.equals("Add")) {
+			PrintWhiteSpace();
+			System.out.println("Please enter a file path and name to output the document.");
+			System.out.print("(ex. C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses): ");
+			String userInFile = userIn.nextLine();
+			FileWriter out = new FileWriter(memoryFile, true);
+			out.write("\n");
+			out.write(userInFile + ".csv");
+			out.close();
+			PrintWhiteSpace();
+			System.out.println("Path saved to memory file. Please reload this program to access the new path.");
+			System.exit(0);
+		}
+		
+		//Open the file selected by the user.
+		userChoice = Integer.parseInt(userEntry);
+		filePath = filePaths.get(userChoice - 1);
+		File file = new File(filePath);
+		
+		//Checks that the file exists and has been established.
+		VerifyFile(file, filePath, date, userIn);
+		
+		//Return the desired file and begin the program.
+		return file;
+	}//end StartProgram
+	
+	//LOADS DATA FROM A NAVY FEDERAL .csv FILE.
+	public static void LoadNFData(File file, Scanner userIn) throws FileNotFoundException {
+		//Variable declaration
+		Scanner baseFile = new Scanner(file);
+		String filePath = "C:\\Users\\Administrator\\Downloads\\NFCU_Credit_Card";
+		String userChoice = "";
+		
+		//Show filepath to user and ask if they want to change it.
+		PrintWhiteSpace();
+		System.out.print("Loading a new file from " + filePath + ".\nWould you like to change the path? [Yes/No]: ");
+		userChoice = userIn.next();
+		userIn.nextLine();
+		if(userChoice.equals("Yes")) {
+			System.out.println("Enter the new file path here: ");
+			filePath = userIn.next();
+			userIn.nextLine();
+		}
+		Scanner newFile = new Scanner(filePath);
+		
+		//Load the file's data.
+		PrintWhiteSpace();
+		System.out.println("Loading file data.");
+		//FIX: LOAD THE DATA!!!!!!!!!!!!
+		
+		baseFile.close();
+		newFile.close();
+	}//end LoadNFData
+
 	//CREATES A BACKUP OF THE FILE.
-	private static void CreateBackup(File file, Scanner userIn) throws IOException {
+	public static void CreateBackup(File file, Scanner userIn) throws IOException {
 		//Variable declaration
 		Scanner in = new Scanner(file);
 		String filePath = "C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses Backup.csv";
@@ -118,12 +225,12 @@ public class register {
 	public static void VerifyFile(File file, String filePath, String date, Scanner userIn) throws IOException {
 		// Variable declaration
 		Double initialBalance = 0.0;
-
-		try (Scanner test = new Scanner(file)) {
-		}
+		
 		// If unable to find the file, create a new one.
+		try (Scanner test = new Scanner(file)) {}
 		catch (FileNotFoundException e) {
-			System.out.println("No such file found at " + filePath);
+			PrintWhiteSpace();
+			System.out.println("No file yet found at " + filePath);
 			System.out.print("Creating a new file. Would you like to change the file path? [Yes/No]: ");
 			String answer = userIn.next();
 			userIn.nextLine();
@@ -152,10 +259,10 @@ public class register {
 					writer.println(date + ",Initial balance,Stating balance transfer,0.00," + initialBalance + ","
 							+ initialBalance);
 				} else {
+					writer.println();
 					writer.println(date + ",Initial balance,No stating balance transfer,0.00,0.00,0.00");
 				}
-			} catch (IOException f) {
-			}
+			} catch (IOException f) {}
 		}
 
 		// Check if the file is empty due to an error.
