@@ -3,8 +3,12 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class register {
@@ -27,14 +31,19 @@ public class register {
 			System.out.println("1 - Add an entry");
 			System.out.println("2 - Lookup Data");
 			System.out.println("3 - Load File from Navy Federal");
-			System.out.println("4 - ");
-			System.out.println("5 - ");
-			System.out.println("6 - ");
-			System.out.println("7 - ");
-			System.out.println("8 - Create backup");
-			System.out.println("9 - End program");
+			System.out.println("4 - Create backup");
+			System.out.println("5 - End program");
 			System.out.print("Your selection: ");
-			choice = userIn.nextInt();
+			try {
+				choice = userIn.nextInt();
+			}
+			catch (InputMismatchException i) {
+				PrintWhiteSpace();
+				System.out.print("Please enter a valid number!");
+				userIn.next();
+				userIn.nextLine();
+				continue;
+			}
 			switch (choice) {
 			case 1:
 				AddEntry(file, date, userIn);
@@ -46,17 +55,9 @@ public class register {
 				LoadNFData(file, userIn);
 				break;
 			case 4:
-				break;
-			case 5:
-				break;
-			case 6:
-				break;
-			case 7:
-				break;
-			case 8: 
 				CreateBackup(file, userIn);
 				break;
-			case 9:
+			case 5:
 				programRunning = false;
 				break;
 			}// end switch
@@ -90,7 +91,7 @@ public class register {
 			System.out.println("This file will store filepaths for quick startup of this program in the future.");
 		}
 				
-		//Find saved filepaths; determine which to use.
+		//Find saved file paths. If none exist, prompt the user to create one.
 		memoryScan = new Scanner(pathsMemoryFile);
 		if(memoryScan.hasNextLine() == false) {
 			PrintWhiteSpace();
@@ -105,7 +106,7 @@ public class register {
 			System.exit(0);
 		}
 		
-		//Look through all lines of memory and add them to an arraylist.
+		//Look through all lines of memory and add them to an array list.
 		while(memoryScan.hasNextLine()) {
 			String currLine = memoryScan.nextLine();
 			filePaths.add(currLine);
@@ -119,11 +120,11 @@ public class register {
 			for(int i = 0; i < filePaths.size(); i++) {
 				System.out.println(i+1 + ": " + filePaths.get(i));
 			}
-			System.out.println("Alternatively, add a new filepath by typing 'Add'.");
+			System.out.println("Alternatively, add a new file path by typing 'Add', or remove a file path by typing 'Remove'.");
 			System.out.print("Your selection: ");
 			userEntry = userIn.next();
 			userIn.nextLine();
-			if(userEntry.equals("Add")) {
+			if(userEntry.equals("Add")) {//If user adds a memory path.
 				PrintWhiteSpace();
 				System.out.println("Please enter a file path and name to output the document.");
 				System.out.print("(ex. C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses): ");
@@ -132,8 +133,35 @@ public class register {
 				out.write("\n");
 				out.write(userInFile + ".csv");
 				out.close();
+				
+				//Advise the user that the path is added and exit the program to update the list. 
 				PrintWhiteSpace();
 				System.out.println("Path saved to memory file. Please reload this program to access the new path.");
+				System.exit(0);
+			}
+			if(userEntry.equals("Remove")) {//If user removes a remembered path.
+				PrintWhiteSpace();
+				System.out.println("Please enter the name and file path to remove.");
+				System.out.print("(ex. " + filePaths.get(0) +"): ");
+				String fileToRemove = userIn.nextLine();
+				Scanner removeScan = new Scanner(pathsMemoryFile);
+				ArrayList<String> newList = new ArrayList<>();
+				while(removeScan.hasNextLine()) {
+					String currLine = removeScan.nextLine();
+					if(!currLine.equals(fileToRemove)) {
+						newList.add(currLine);
+					}
+				}
+				FileWriter out = new FileWriter(pathsMemoryFile);
+				for(int i = 0; i < newList.size(); i++) {
+					out.write(newList.get(i));
+				}
+				out.close();
+				removeScan.close();
+				
+				//Advise the user that the path is removed and exit the program to update the list. 
+				PrintWhiteSpace();
+				System.out.println("Path removed from memory file. Keep in mind that this action did not delete the file.\nPlease reload this program to continue.");
 				System.exit(0);
 			}
 			
@@ -172,6 +200,7 @@ public class register {
 		String filePath = "";
 		ArrayList<String> inputData = new ArrayList<>();
 		ArrayList<String> existingData = new ArrayList<>();
+		ArrayList<String> sortedDupeData = new ArrayList<>();
 		ArrayList<String> sortedData = new ArrayList<>();
 		Boolean invalidPath = false;
 		
@@ -194,29 +223,41 @@ public class register {
 		}
 		while(invalidPath);//Repeat previous steps
 
-		//Load the new file's data and close the file.
+		//Load the new file's data and close the file. 
 		PrintWhiteSpace();
 		System.out.println("Loading file data from");
 		System.out.println(filePath);
 		System.out.println("to the current register.");
 		newFile.nextLine(); //Clear the first line (header) from the input file.
 		while(newFile.hasNextLine()) {
-			Scanner curLine = new Scanner(newFile.nextLine());
+			String line = newFile.nextLine();//Get the current line from the input file.
+			
+			//Check that the number of commas in this line is expected. FIXME: Instead of detecting the problem, fix it.
+			int numCommas = line.length() - line.replace(",", "").length();
+			if(numCommas != 12) {
+				System.out.println("Issue detected: unexpected number of columns in input. Proceeding to next row.");
+				System.out.println("Check the following data: " + line);
+				System.out.println("Does the organization name have commas in it?");
+				System.out.println("Proceeding to the next row.");
+				continue;
+			}//FIXME end of debugging.
+			
+			//Work the line into the correct format.
+			Scanner curLine = new Scanner(line);
 			curLine.useDelimiter(",");
 			String entry = curLine.next();//Start entry by adding the date.
 			Double amount = curLine.nextDouble();//Record amount of change.
 			String changeType = curLine.next();//Debit or Credit.
-			curLine.next();//Skip unnecessary/nonexistent data +5 lines.
-			curLine.next();
-			curLine.next();
-			curLine.next();
-			curLine.next();
-			curLine.next();
+			curLine.next();//Skip type.
+			curLine.next();//Skip Type Group.
+			curLine.next();//Skip Reference.
+			curLine.next();//Skip Instructed Currency.
+			curLine.next();//Skip Currency Exchange Rate.
+			curLine.next();//Skip Instructed Amount.
 			String specification = curLine.next();//Company/organization name.
-			if(specification.equals("CRONIN ACE BAYMEADOWS"))//TROUBLE: THIS ORGANIZATION HAS A COMMA IN THEIR NAME!
-				curLine.next();
 			String description = curLine.next();//Type of charge.
-			curLine.nextLine();//No further data required.
+			curLine.nextLine();//No further data required; skip Check Serial Number and Card Ending.
+			curLine.close();
 			Double spent = 0.0;
 			Double earned = 0.0;
 			if(changeType.equals("Debit"))
@@ -238,23 +279,75 @@ public class register {
 		}
 		baseFile.close();
 		
-		//Sort the new file's data by date along with the existing file's data.
-		//sortedData.add(existingData.get(0));//Seed value to begin sorting with.
+		//Add all data to a single array list.
 		for(int i = 0; i < existingData.size(); i++) {
-			sortedData.add(existingData.get(i));
+			sortedDupeData.add(existingData.get(i));
+		}
+		for(int i = 0; i < inputData.size(); i++) {
+			sortedDupeData.add(inputData.get(i));
 		}
 		
-		for(int i = 0; i < inputData.size(); i++) {
-			sortedData.add(inputData.get(i));
-		}//FIXME: ADD AN ACTUAL SORTING ALGORITHM.
+		//Remove duplicates from the sorted list, if any.
+		for(int i = 0; i < sortedDupeData.size(); i++) {
+			String balEntry = sortedDupeData.get(i);
+			Scanner curLine = new Scanner(balEntry);
+			curLine.useDelimiter(",");
+			String noBalEntry = curLine.next() + "," + curLine.next() + "," + curLine.next() + "," + curLine.next() + "," + curLine.next();//Add every field but balance
+			curLine.close();
+			if(!sortedData.contains(noBalEntry)) {
+				sortedData.add(noBalEntry);
+			}
+		}
+		
+		//Sort the array list by date.
+		sortedData.sort(new Comparator<String>() {
+			@Override
+			public int compare(String o1, String o2) {
+				DateTimeFormatter formatter = null;
+				String firstDate = o1.substring(0,10);
+				String secondDate = o2.substring(0,10);
+				
+				//Analyze the format of the first date.
+				if(firstDate.substring(0,3).matches("[0-9]+")) {
+					formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+				}
+				else {
+					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+				}
+				LocalDate firstRealDate = LocalDate.parse(firstDate,formatter);
+				//Analyze the format of the second date.
+				if(secondDate.substring(0,3).matches("[0-9]+")) {
+					formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+				}
+				else {
+					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+				}
+				LocalDate secondRealDate = LocalDate.parse(secondDate,formatter);
+				
+				//Compare both dates.
+				return firstRealDate.compareTo(secondRealDate);
+			}
+		});
 		
 		//Write the sorted data back to the base file; overwrite all data in the base file.
+		Double balance = 0.0;
 		try {
 			FileWriter out = new FileWriter(file);
 			out.write("DATE,DESCRIPTION,SPECIFICATION,$ SPENT,$ EARNED,BALANCE");//Write the file header.
 			for(int i = 0; i < sortedData.size(); i++) {
+				String curLine = sortedData.get(i);
+				Scanner lineScan = new Scanner(curLine);
+				lineScan.useDelimiter(",");
+				lineScan.next();//Skip date
+				lineScan.next();//Skip description
+				lineScan.next();//Skip specification
+				Double spent = lineScan.nextDouble();
+				Double earned = lineScan.nextDouble();
+				balance -= spent;
+				balance += earned;
+				lineScan.close();
 				out.write("\n");
-				out.write(sortedData.get(i));
+				out.write(curLine + "," + balance);
 			}
 			out.close();
 		}
