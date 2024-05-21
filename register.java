@@ -23,7 +23,7 @@ public class register {
 		Boolean programRunning = true;
 		do {
 			PrintWhiteSpace();
-			System.out.println("Choose an option from the following list:");
+			System.out.println("File accessed successfully.\nChoose an option from the following list:");
 			System.out.println("1 - Add an entry");
 			System.out.println("2 - Lookup Data");
 			System.out.println("3 - Load File from Navy Federal");
@@ -75,29 +75,29 @@ public class register {
 		String filePath = "";
 		String userEntry = "";
 		ArrayList<String> filePaths = new ArrayList<>();
-		File memoryFile = new File("Register Memory.txt");
+		File pathsMemoryFile = new File("Register Paths Memory.txt");
 		Scanner memoryScan;
+		Boolean invalidChoice;
 		
 		//Welcome message
 		System.out.println("Starting up your personal register system!");
 				
-		//Verify memory text file exists, create one if not and tell the user.
-		if(memoryFile.exists() == false) {
-			memoryFile.createNewFile();
+		//Verify paths memory text file exists, create one if not and tell the user.
+		if(pathsMemoryFile.exists() == false) {
+			pathsMemoryFile.createNewFile();
 			PrintWhiteSpace();
-			System.out.println("Created a new memory file (Register Memory.txt) at the directory in which this program is stored.");
+			System.out.println("Created a new memory file (Register Paths Memory.txt) at the directory in which this program is stored.");
 			System.out.println("This file will store filepaths for quick startup of this program in the future.");
 		}
-		
-		
+				
 		//Find saved filepaths; determine which to use.
-		memoryScan = new Scanner(memoryFile);
+		memoryScan = new Scanner(pathsMemoryFile);
 		if(memoryScan.hasNextLine() == false) {
 			PrintWhiteSpace();
-			System.out.println("No file path is saved in memory. Please enter a file path and name to output the document.");
+			System.out.println("No file path is saved in memory. Please enter a file path and name at which to output the register file.");
 			System.out.print("(ex. C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses): ");
 			String userInFile = userIn.nextLine() + ".csv";
-			FileWriter out = new FileWriter(memoryFile, true);
+			FileWriter out = new FileWriter(pathsMemoryFile, true);
 			out.write(userInFile);
 			out.close();
 			PrintWhiteSpace();
@@ -112,33 +112,49 @@ public class register {
 		}
 		memoryScan.close();
 		
-		//Show available paths to user and ask them to choose one. Enter loop to refresh this selection if a new path is added.
-		PrintWhiteSpace();
-		System.out.println("Which file would you like to use? Enter the integer corresponding to your choice.");
-		for(int i = 0; i < filePaths.size(); i++) {
-			System.out.println(i+1 + ": " + filePaths.get(i));
-		}
-		System.out.println("Alternatively, add a new filepath by typing 'Add'.");
-		System.out.print("Your selection: ");
-		userEntry = userIn.next();
-		userIn.nextLine();
-		if(userEntry.equals("Add")) {
+		//Show available paths to user and ask them to choose one.
+		do {
 			PrintWhiteSpace();
-			System.out.println("Please enter a file path and name to output the document.");
-			System.out.print("(ex. C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses): ");
-			String userInFile = userIn.nextLine();
-			FileWriter out = new FileWriter(memoryFile, true);
-			out.write("\n");
-			out.write(userInFile + ".csv");
-			out.close();
-			PrintWhiteSpace();
-			System.out.println("Path saved to memory file. Please reload this program to access the new path.");
-			System.exit(0);
+			System.out.println("Which file would you like to use? Enter the integer corresponding to your choice.");
+			for(int i = 0; i < filePaths.size(); i++) {
+				System.out.println(i+1 + ": " + filePaths.get(i));
+			}
+			System.out.println("Alternatively, add a new filepath by typing 'Add'.");
+			System.out.print("Your selection: ");
+			userEntry = userIn.next();
+			userIn.nextLine();
+			if(userEntry.equals("Add")) {
+				PrintWhiteSpace();
+				System.out.println("Please enter a file path and name to output the document.");
+				System.out.print("(ex. C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses): ");
+				String userInFile = userIn.nextLine();
+				FileWriter out = new FileWriter(pathsMemoryFile, true);
+				out.write("\n");
+				out.write(userInFile + ".csv");
+				out.close();
+				PrintWhiteSpace();
+				System.out.println("Path saved to memory file. Please reload this program to access the new path.");
+				System.exit(0);
+			}
+			
+			//Attempt to open the file selected by the user.
+			invalidChoice = false;
+			try {
+				userChoice = Integer.parseInt(userEntry);
+				filePath = filePaths.get(userChoice - 1);
+			}
+			catch(IndexOutOfBoundsException i) {
+				PrintWhiteSpace();
+				System.out.println("Invalid choice. Please enter one of the available numbers or add a new path.");
+				invalidChoice = true;
+			}
+			catch(NumberFormatException n) {
+				PrintWhiteSpace();
+				System.out.println("Invalid choice. Please enter a number or type 'Add'.");
+				invalidChoice = true;
+			}
 		}
-		
-		//Open the file selected by the user.
-		userChoice = Integer.parseInt(userEntry);
-		filePath = filePaths.get(userChoice - 1);
+		while(invalidChoice);
 		File file = new File(filePath);
 		
 		//Checks that the file exists and has been established.
@@ -149,31 +165,114 @@ public class register {
 	}//end StartProgram
 	
 	//LOADS DATA FROM A NAVY FEDERAL .csv FILE.
-	public static void LoadNFData(File file, Scanner userIn) throws FileNotFoundException {
+	public static void LoadNFData(File file, Scanner userIn) throws IOException {
 		//Variable declaration
 		Scanner baseFile = new Scanner(file);
-		String filePath = "C:\\Users\\Administrator\\Downloads\\NFCU_Credit_Card";
-		String userChoice = "";
+		Scanner newFile = null;
+		String filePath = "";
+		ArrayList<String> inputData = new ArrayList<>();
+		ArrayList<String> existingData = new ArrayList<>();
+		ArrayList<String> sortedData = new ArrayList<>();
+		Boolean invalidPath = false;
 		
-		//Show filepath to user and ask if they want to change it.
-		PrintWhiteSpace();
-		System.out.print("Loading a new file from " + filePath + ".\nWould you like to change the path? [Yes/No]: ");
-		userChoice = userIn.next();
-		userIn.nextLine();
-		if(userChoice.equals("Yes")) {
-			System.out.println("Enter the new file path here: ");
-			filePath = userIn.next();
+		//Ask user for a file path to the input file.
+		do {
+			invalidPath = false;
+			PrintWhiteSpace();
+			System.out.print("Enter the file path of the input file here (ex. C:\\Users\\Administrator\\Downloads\\NFCU_Credit_Card): ");
+			filePath = userIn.next() + ".csv";
 			userIn.nextLine();
+			File nfFile = new File(filePath);
+			try {//Check to make sure the provided file path is valid.
+				newFile = new Scanner(nfFile);
+			}
+			catch(FileNotFoundException f) {
+				PrintWhiteSpace();
+				System.out.println("The system cannot find the file specified. Please check the entered file path.");
+				invalidPath = true;
+			}
 		}
-		Scanner newFile = new Scanner(filePath);
-		
-		//Load the file's data.
+		while(invalidPath);//Repeat previous steps
+
+		//Load the new file's data and close the file.
 		PrintWhiteSpace();
-		System.out.println("Loading file data.");
-		//FIX: LOAD THE DATA!!!!!!!!!!!!
-		
-		baseFile.close();
+		System.out.println("Loading file data from");
+		System.out.println(filePath);
+		System.out.println("to the current register.");
+		newFile.nextLine(); //Clear the first line (header) from the input file.
+		while(newFile.hasNextLine()) {
+			Scanner curLine = new Scanner(newFile.nextLine());
+			curLine.useDelimiter(",");
+			String entry = curLine.next();//Start entry by adding the date.
+			Double amount = curLine.nextDouble();//Record amount of change.
+			String changeType = curLine.next();//Debit or Credit.
+			curLine.next();//Skip unnecessary/nonexistent data +5 lines.
+			curLine.next();
+			curLine.next();
+			curLine.next();
+			curLine.next();
+			curLine.next();
+			String specification = curLine.next();//Company/organization name.
+			if(specification.equals("CRONIN ACE BAYMEADOWS"))//TROUBLE: THIS ORGANIZATION HAS A COMMA IN THEIR NAME!
+				curLine.next();
+			String description = curLine.next();//Type of charge.
+			curLine.nextLine();//No further data required.
+			Double spent = 0.0;
+			Double earned = 0.0;
+			if(changeType.equals("Debit"))
+				spent = amount;
+			else if(changeType.equals("Credit"))
+				earned = amount;
+			entry = entry + "," + description + "," + specification + "," + spent + "," + earned;
+			inputData.add(entry);
+		}
 		newFile.close();
+		
+		//Load the existing file's data and close the file.
+		baseFile.nextLine(); //Clear the first line (header) from the base file.
+		while(baseFile.hasNextLine()) {
+			String curLine = baseFile.nextLine();
+			if(curLine.isEmpty() == false) {
+				existingData.add(curLine);
+			}
+		}
+		baseFile.close();
+		
+		//Sort the new file's data by date along with the existing file's data.
+		//sortedData.add(existingData.get(0));//Seed value to begin sorting with.
+		for(int i = 0; i < existingData.size(); i++) {
+			sortedData.add(existingData.get(i));
+		}
+		
+		for(int i = 0; i < inputData.size(); i++) {
+			sortedData.add(inputData.get(i));
+		}//FIXME: ADD AN ACTUAL SORTING ALGORITHM.
+		
+		//Write the sorted data back to the base file; overwrite all data in the base file.
+		try {
+			FileWriter out = new FileWriter(file);
+			out.write("DATE,DESCRIPTION,SPECIFICATION,$ SPENT,$ EARNED,BALANCE");//Write the file header.
+			for(int i = 0; i < sortedData.size(); i++) {
+				out.write("\n");
+				out.write(sortedData.get(i));
+			}
+			out.close();
+		}
+		catch (FileNotFoundException e) {
+			PrintWhiteSpace();
+			System.out.println("Unable to write to the output file. Make sure it isn't open!");
+			System.out.print("Press any key to return to main menu: ");
+			userIn.next();
+			userIn.nextLine();
+			return;
+		}
+		
+		//Take user back to the main menu.
+		PrintWhiteSpace();
+		System.out.print("Successfully loaded data into the selected register. Press any key to return to main menu: ");
+		userIn.next();
+		userIn.nextLine();
+		return;
 	}//end LoadNFData
 
 	//CREATES A BACKUP OF THE FILE.
@@ -230,16 +329,15 @@ public class register {
 		try (Scanner test = new Scanner(file)) {}
 		catch (FileNotFoundException e) {
 			PrintWhiteSpace();
-			System.out.println("No file yet found at " + filePath);
-			System.out.print("Creating a new file. Would you like to change the file path? [Yes/No]: ");
+			System.out.println("No file yet exists at " + filePath);
+			System.out.print("Creating a new register file. Would you like to change the file path or name? [Yes/No]: ");
 			String answer = userIn.next();
 			userIn.nextLine();
-			// Ask the user if they would like to specify a new filePath.
+			// Ask the user if they would like to specify a new file path and name.
 			if (answer.equals("Yes")) {
-				System.out.print("Specify a new file path here (ex. C:\\Users\\Administrator\\Documents\\): ");
+				System.out.print("Specify a new file path and file name here (ex. C:\\Users\\Administrator\\Documents\\Income and Expenses): ");
 				filePath = userIn.nextLine();
-				filePath = filePath + "Income and Expenses.csv";
-				System.out.println("Remember to change the default filepath in your program before you load it again!");
+				filePath = filePath + ".csv";
 			}
 			PrintWhiteSpace();
 			file = new File(filePath);
@@ -291,7 +389,7 @@ public class register {
 	}// end VerifyFile
 
 	// ADDS ONE OR MORE ENTRIES TO THE FILE.
-	public static void AddEntry(File file, String date, Scanner userIn) throws FileNotFoundException {
+	public static void AddEntry(File file, String date, Scanner userIn) throws IOException {
 		// Variable declaration
 		Double curBalance = 0.0;
 		Double spent = 0.0;
@@ -299,17 +397,32 @@ public class register {
 		Boolean anotherEntry = true;
 		String description = "";
 		String specification = "";
+		File descsMemoryFile = new File("Descriptions Memory.txt");
+		ArrayList<String> loadedDescs = new ArrayList<>();
+		ArrayList<String> validRows = new ArrayList<>();
 
+		//Verify descriptions memory file exists, create one if not and tell the user.
+		if(descsMemoryFile.exists() == false) {
+			descsMemoryFile.createNewFile();
+			PrintWhiteSpace();
+			System.out.println("Created a new description preference file (Descriptions Memory.txt) at the directory in which this program is stored.");
+			System.out.println("This file will store already-used descriptions for future organizational assistance.");
+		}
+		
+		//Enter main method loop.
 		do {
-			// Find the current balance of the account.
+			//Find the last entry of the register. Remove empty rows from the file, to allow for easier access of the last valid row.
 			Scanner in = new Scanner(file);
-			Scanner lastLine;
-			String temp = "";
 			while (in.hasNextLine()) {
-				temp = in.nextLine();
-			}
-			lastLine = new Scanner(temp);
+				String curLine = in.nextLine();
+				if(curLine.length() > 5) {//Only add non-empty rows.
+					validRows.add(curLine);
+				}
+			}//end while loop
+			Scanner lastLine = new Scanner(validRows.get(validRows.size()-1));//Scan the last line.
 			lastLine.useDelimiter(",");
+			
+			// Find the current balance of the account from the last line. 
 			for (int i = 0; i < 5; i++) {
 				lastLine.next();
 			}
@@ -319,19 +432,33 @@ public class register {
 			PrintWhiteSpace();
 			System.out.println("You are now adding an entry to the register. The current balance of this account is " + curBalance + "$.");
 
-			// Gather user data.
-			System.out.println("Please enter a one-word description of the change. Common descriptions are: ");
-			System.out.println("fast food");
-			System.out.println("salary");
-			System.out.println("tips");
-			System.out.println("online");
-			System.out.println("gas");
-			System.out.println("donation");
-			System.out.println("groceries");
+			// Gather user data; present list of existing general descriptions. //FIXME Data not writing to file? 
+			System.out.println("Please enter a one-word description of the change.");
+			Scanner descScanner = new Scanner(descsMemoryFile);
+			if(descScanner.hasNextLine()) {//Print out saved descriptions
+				System.out.println("Existing descriptions are: ");
+				while(descScanner.hasNextLine()) {
+					String curDescLine = descScanner.nextLine();
+					loadedDescs.add(curDescLine);
+					System.out.println(curDescLine);
+				}
+				descScanner.close();
+			}
+			else {
+				System.out.println("Common descriptions are: \nGasoline/Fuel\nGroceries\nRestaurants/Dining\nSalary\nTips\nGeneralMerchandise\nHomeImprovement");
+			}
 			System.out.print("Your selection: ");
 			description = userIn.next();
 			userIn.nextLine();
-			System.out.print("Please enter a one-word specification if applicable (ex. Burger King, Doordash,  n/a, etc.): ");
+			for(int i = 0; i < loadedDescs.size(); i++) {//If the user's description does not match an existing description, add it to the file.
+				if(description.equals(loadedDescs.get(i)) == false) {
+					FileWriter out = new FileWriter(descsMemoryFile, true);
+					out.write("\n");
+					out.write(loadedDescs.get(i));
+					out.close();
+				}
+			}
+			System.out.print("Please enter a one-word specification if applicable (ex. Burger King, Doordash, etc.): ");
 			specification = userIn.next();
 			userIn.nextLine();
 			System.out.print("Enter how much was SPENT, 0 if none: ");
@@ -381,8 +508,11 @@ public class register {
 		Double totalSpent = 0.0;
 		Double totalEarned = 0.0;
 		int i = 0;
+		File descsMemoryFile = new File("Descriptions Memory.txt");
 		Scanner in = new Scanner(file);
+		Scanner descScanner = new Scanner(descsMemoryFile);
 		ArrayList<String> arr = new ArrayList<>();
+		ArrayList<String> loadedDescs = new ArrayList<>();
 		
 		//Ask user for a date range, then load array with data from that date range, excluding the date value from each result.
 		PrintWhiteSpace();
@@ -464,20 +594,26 @@ public class register {
 				System.out.println("Returing to main menu.");
 			}
 			userIn.nextLine();
+			descScanner.close();
 			return;
 		}
 		
 		//Ask the user for search critera for that data set.
 		PrintWhiteSpace();
 		System.out.println("Data loaded. " + arr.size() + " results found.");
-		System.out.println("What description would you like to search for? Common descriptions are: ");
-		System.out.println("fast food");
-		System.out.println("salary");
-		System.out.println("tips");
-		System.out.println("online");
-		System.out.println("gas");
-		System.out.println("donation");
-		System.out.println("groceries");
+		System.out.println("What description would you like to search for?");
+		if(descScanner.hasNextLine()) {//Print out saved descriptions
+			System.out.println("Existing descriptions are: ");
+			while(descScanner.hasNextLine()) {
+				String curDescLine = descScanner.nextLine();
+				loadedDescs.add(curDescLine);
+				System.out.println(curDescLine);
+			}
+			descScanner.close();
+		}
+		else {
+			System.out.println("Common descriptions are: \nGasoline/Fuel\nGroceries\nRestaurants/Dining\nSalary\nTips\nGeneralMerchandise\nHomeImprovement");
+		}
 		System.out.print("Your selection: ");
 		userDescChoice = userIn.next();
 		userIn.nextLine();
