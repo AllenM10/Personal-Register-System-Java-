@@ -8,8 +8,22 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Formatter;
 import java.util.InputMismatchException;
 import java.util.Scanner;
+
+/*
+ * CONVENTIONS
+ * 
+ * 1. When formatting money output, use the following format:
+ * Formatter dollarFormat = new Formatter();
+ * System.out.println("$" + dollarFormat.format("%.2f", curBalance) + ".");
+ * dollarFormat.close();
+ * MAKE SURE TO CLOSE THE FORMATTER AFTER EACH USE.
+ * 
+ * 2. 
+ * 
+ */
 
 public class register {
 	public static void main(String[] args) throws IOException {
@@ -91,9 +105,9 @@ public class register {
 			System.out.println("This file will store filepaths for quick startup of this program in the future.");
 		}
 				
-		//Find saved file paths. If none exist, prompt the user to create one.
+		//Find saved file paths. 
 		memoryScan = new Scanner(pathsMemoryFile);
-		if(memoryScan.hasNextLine() == false) {
+		if(memoryScan.hasNextLine() == false) {//If none exist, prompt the user to create one.
 			PrintWhiteSpace();
 			System.out.println("No file path is saved in memory. Please enter a file path and name at which to output the register file.");
 			System.out.print("(ex. C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses): ");
@@ -171,18 +185,19 @@ public class register {
 				userChoice = Integer.parseInt(userEntry);
 				filePath = filePaths.get(userChoice - 1);
 			}
-			catch(IndexOutOfBoundsException i) {
+			catch(IndexOutOfBoundsException i) {//If the user enters an unlisted number.
 				PrintWhiteSpace();
 				System.out.println("Invalid choice. Please enter one of the available numbers or add a new path.");
 				invalidChoice = true;
 			}
-			catch(NumberFormatException n) {
+			catch(NumberFormatException n) {//If the user enters something other than a number.
 				PrintWhiteSpace();
 				System.out.println("Invalid choice. Please enter a number or type 'Add'.");
 				invalidChoice = true;
 			}
 		}
-		while(invalidChoice);
+		while(invalidChoice);//end dowhile loop
+		
 		File file = new File(filePath);
 		
 		//Checks that the file exists and has been established.
@@ -232,15 +247,25 @@ public class register {
 		while(newFile.hasNextLine()) {
 			String line = newFile.nextLine();//Get the current line from the input file.
 			
-			//Check that the number of commas in this line is expected. FIXME: Instead of detecting the problem, fix it.
+			//Check that the number of commas in this line is expected.
 			int numCommas = line.length() - line.replace(",", "").length();
-			if(numCommas != 12) {
-				System.out.println("Issue detected: unexpected number of columns in input. Proceeding to next row.");
-				System.out.println("Check the following data: " + line);
-				System.out.println("Does the organization name have commas in it?");
-				System.out.println("Proceeding to the next row.");
-				continue;
-			}//FIXME end of debugging.
+			if(numCommas != 12) { //If unexpected, remove additional commas within quotes.
+				int firstQuotePos = 0;
+				int secondQuotePos = 0;
+				for(int i = 0; i < line.length(); i++) {
+					if(line.charAt(i) == '"' && firstQuotePos == 0)
+						firstQuotePos = i;
+					if(firstQuotePos != 0) {
+						if(line.charAt(i) == '"')
+							secondQuotePos = i;
+					}
+				}
+				String problemName = line.substring(firstQuotePos,secondQuotePos+1);
+				problemName = problemName.replaceAll("\\,", "");//Remove commas
+				problemName = problemName.replaceAll("\"", "");//Remove quotations, as those seem to cause problems as well.
+				String remainder = line.substring(secondQuotePos+1,line.length()-1);
+				line = line.substring(0,firstQuotePos) + problemName + remainder;//Proceed with analyzing the corrected string.
+			}
 			
 			//Work the line into the correct format.
 			Scanner curLine = new Scanner(line);
@@ -372,13 +397,14 @@ public class register {
 	public static void CreateBackup(File file, Scanner userIn) throws IOException {
 		//Variable declaration
 		Scanner in = new Scanner(file);
-		String filePath = "C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses Backup.csv";
+		String filePath = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-4) + " Backup.csv";
 		File backupFile;
 		FileWriter out;
 		
 		// Ask the user if they would like to specify a new file path.
 		PrintWhiteSpace();
-		System.out.print("Creating a new file. Would you like to change the file path? [Yes/No]: ");
+		System.out.println("Creating a new backup file. It will be output as " + filePath);
+		System.out.print("Would you like to change the file path? [Yes/No]: ");
 		String answer = userIn.next();
 		userIn.nextLine();
 		if (answer.equals("Yes")) {
@@ -392,7 +418,6 @@ public class register {
 		PrintWhiteSpace();
 		backupFile = new File(filePath);
 		backupFile.createNewFile();
-		System.out.println("Created a new file at " + filePath);
 		
 		//Copy one file onto the other
 		out = new FileWriter(backupFile);
@@ -403,7 +428,7 @@ public class register {
 		}
 		out.close();
 		in.close();
-		System.out.println("Backup successfully created.");
+		System.out.println("Backup successfully created at " + filePath);
 	}//end CreateBackup
 	
 	//PRINTS WHITESPACE.
@@ -493,6 +518,7 @@ public class register {
 		File descsMemoryFile = new File("Descriptions Memory.txt");
 		ArrayList<String> loadedDescs = new ArrayList<>();
 		ArrayList<String> validRows = new ArrayList<>();
+		Formatter balFormat;
 
 		//Verify descriptions memory file exists, create one if not and tell the user.
 		if(descsMemoryFile.exists() == false) {
@@ -523,10 +549,12 @@ public class register {
 			lastLine.close();
 			in.close();
 			PrintWhiteSpace();
-			System.out.println("You are now adding an entry to the register. The current balance of this account is " + curBalance + "$.");
-
+			balFormat = new Formatter();
+			System.out.println("You are now adding an entry to the register. The current balance of this account is $" + balFormat.format("%.2f", curBalance) + ".");
+			balFormat.close();
+			
 			// Gather user data; present list of existing general descriptions. //FIXME Data not writing to file? 
-			System.out.println("Please enter a one-word description of the change.");
+			System.out.print("Please enter a one-word description of the change.");
 			Scanner descScanner = new Scanner(descsMemoryFile);
 			if(descScanner.hasNextLine()) {//Print out saved descriptions
 				System.out.println("Existing descriptions are: ");
@@ -538,7 +566,7 @@ public class register {
 				descScanner.close();
 			}
 			else {
-				System.out.println("Common descriptions are: \nGasoline/Fuel\nGroceries\nRestaurants/Dining\nSalary\nTips\nGeneralMerchandise\nHomeImprovement");
+				System.out.println("Common descriptions are: \nGasoline/Fuel\nGroceries\nRestaurants/Dining\nSalary\nTips\nGeneralMerchandise");
 			}
 			System.out.print("Your selection: ");
 			description = userIn.next();
@@ -551,6 +579,9 @@ public class register {
 					out.close();
 				}
 			}
+			
+			//Gather data on specification (organization/individual name), if any.
+			PrintWhiteSpace();
 			System.out.print("Please enter a one-word specification if applicable (ex. Burger King, Doordash, etc.): ");
 			specification = userIn.next();
 			userIn.nextLine();
@@ -572,17 +603,18 @@ public class register {
 				writer.write("\n");
 				writer.close();
 			} catch (FileNotFoundException d) {
+				PrintWhiteSpace();
 				System.out.println("Unable to write to file - make sure it isn't open!");
-				d.printStackTrace();
 				System.exit(0);
 			} catch (IOException i) {
+				PrintWhiteSpace();
 				System.out.println("Unable to write to file.");
-				i.printStackTrace();
 				System.exit(0);
 			}
-
-			System.out.print("Entry saved. The new balance of the account is " + curBalance
-					+ "$. Would you like to add another entry? [Yes/No]: ");
+			balFormat = new Formatter();
+			System.out.println("Entry saved. The new balance of the account is: $" + balFormat.format("%.2f",curBalance) + ".");
+			balFormat.close();
+			System.out.print("Would you like to add another entry? [Yes/No]: ");
 			String answer = userIn.next();
 			if (answer.equals("No")) {
 				anotherEntry = false;
@@ -631,7 +663,7 @@ public class register {
 							break;
 						}
 						if(date.substring(6,8).equals(userYear) && date.substring(0,2).equals(userMonth)) {
-							arr.add(line.next() + " " + line.next() + " " + line.next() + " " + line.next() + " " + line.next());
+							arr.add(line.next() + "," + line.next() + "," + line.next() + "," + line.next() + "," + line.next());
 						}
 					}
 					else {
@@ -650,7 +682,7 @@ public class register {
 							break;
 						}
 						if(date.substring(6,8).equals(userYear)) {
-							arr.add(line.next() + " " + line.next() + " " + line.next() + " " + line.next() + " " + line.next());
+							arr.add(line.next() + "," + line.next() + "," + line.next() + "," + line.next() + "," + line.next());
 						}
 					}
 					else {
@@ -669,7 +701,7 @@ public class register {
 					if(date.isEmpty()) {
 						break;
 					}
-					arr.add(line.next() + " " + line.next() + " " + line.next() + " " + line.next() + " " + line.next());
+					arr.add(line.next() + "," + line.next() + "," + line.next() + "," + line.next() + "," + line.next());
 				}
 				else {
 					in.nextLine();
@@ -690,8 +722,9 @@ public class register {
 			descScanner.close();
 			return;
 		}
+		//Resulting array list will contain strings of DESCRIPTION,SPECIFICATION,$ SPENT,$ EARNED,BALANCE
 		
-		//Ask the user for search critera for that data set.
+		//Ask the user for search criteria for that data set.
 		PrintWhiteSpace();
 		System.out.println("Data loaded. " + arr.size() + " results found.");
 		System.out.println("What description would you like to search for?");
@@ -717,34 +750,41 @@ public class register {
 		System.out.print("Alternatively, enter No to proceed without a search specification: ");
 		userSpecChoice = userIn.next();
 		userIn.nextLine();
-		
-		if(userSpecChoice.equals("No")) {//if user provided only a description.
+		if(userSpecChoice.equals("No")) {//if the user provided only a description.
 			for(int j = 0; j < arr.size(); j++) {
-				String[] line = arr.get(j).split(" ");
+				String[] line = arr.get(j).split(",");
 				if(line[0].equals(userDescChoice)) {
 					totalSpent += Double.parseDouble(line[2]);
 					totalEarned += Double.parseDouble(line[3]);
 				}
 			}//end for loop
 			
-			//Print results of search
+			//Print results of the search without specification.
 			PrintWhiteSpace();
-			System.out.println("Total spent on " + userDescChoice + ": " + totalSpent);
-			System.out.println("Total earned through " + userDescChoice + ": " + totalEarned);
+			Formatter spentFormat = new Formatter();
+			System.out.println("Total spent on " + userDescChoice + ": $" + spentFormat.format("%.2f",totalSpent));
+			spentFormat.close();
+			Formatter earnedFormat = new Formatter();
+			System.out.println("Total earned through " + userDescChoice + ": $" + earnedFormat.format("%.2f",totalEarned));
+			earnedFormat.close();
 		}
-		else {//if user provided only a description.
+		else {//if the user provided a description and a specification.
 			for(int j = 0; j < arr.size(); j++) {
-				String[] line = arr.get(j).split(" ");
+				String[] line = arr.get(j).split(",");
 				if(line[0].equals(userDescChoice) && line[1].equals(userSpecChoice)) {
 					totalSpent += Double.parseDouble(line[2]);
 					totalEarned += Double.parseDouble(line[3]);
 				}
 			}//end for loop
 			
-			//Print results of search.
+			//Print results of search with specification.
 			PrintWhiteSpace();
-			System.out.println("Total spent on " + userDescChoice + " from " + userSpecChoice + ": " + totalSpent);
-			System.out.println("Total earned through " + userDescChoice + " from " + userSpecChoice + ": " + totalEarned);
+			Formatter spentFormat = new Formatter();
+			System.out.println("Total spent on " + userDescChoice + " from " + userSpecChoice + ": $" + spentFormat.format("%.2f",totalSpent));
+			spentFormat.close();
+			Formatter earnedFormat = new Formatter();
+			System.out.println("Total earned through " + userDescChoice + " from " + userSpecChoice + ": $" + earnedFormat.format("%.2f",totalEarned));
+			earnedFormat.close();
 		}
 		
 		//Allow user to view data
