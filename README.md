@@ -6,7 +6,7 @@ TO USE THIS PROGRAM:
 2. Download all of the files in this repository by clicking on the green "Code" button on the main page, then click "Download ZIP"
 3. Extract the ZIP wherever is convenient.
 4. Load into Eclipse. To create a new Java project, navigate: File > New > Java Project.
-5. Enter a Project name: and ensure "Create module-info.java file" under Module is unchecked. Click Finish.
+5. Enter a Project name (whatever you would like) and ensure "Create module-info.java file" under Module is unchecked. Click Finish.
 6. On the left, use the arrow to dropdown the project’s contents.
 7. Right-click on the project’s "src" section and navigate: New > Class
 8. Name the class "register" and hit  finish.
