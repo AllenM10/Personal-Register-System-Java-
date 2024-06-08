@@ -5,14 +5,13 @@ TO USE THIS PROGRAM:
 1. You must install Eclipse. If you already have Eclipse, skip this step. Otherwise, download the latest version of this IDE from the following link: [ https://www.eclipse.org/downloads/ ] (The option titled, "Install your favorite desktop IDE packages")
 2. Download all of the files in this repository by clicking on the green "Code" button on the main page, then click "Download ZIP"
 3. Extract the ZIP wherever is convenient.
-4. Load into Eclipse and create a new project.
-5. To create a new Java project, navigate: File > New > Java Project.
-6. Enter a Project name: and ensure "Create module-info.java file" under Module is unchecked. Click Finish.
-7. On the left, use the arrow to dropdown the project’s contents.
-8. Right-click on the project’s "src" section and navigate: New > Class
-9. Name the class "register" and hit  finish.
-10. If the Console tab (where code output is shown) does not automatically appear, navigate on the topmost bar: Window > Show View > Console
-11. Open the "register.java" file and copy all of its contents into eclipse with Ctrl+A and Ctrl+C in the file, and Ctrl+V in Eclipse.
+4. Load into Eclipse. To create a new Java project, navigate: File > New > Java Project.
+5. Enter a Project name: and ensure "Create module-info.java file" under Module is unchecked. Click Finish.
+6. On the left, use the arrow to dropdown the project’s contents.
+7. Right-click on the project’s "src" section and navigate: New > Class
+8. Name the class "register" and hit  finish.
+9. If the Console tab (where code output is shown) does not automatically appear, navigate on the topmost bar: Window > Show View > Console
+10. Open the "register.java" file and copy all of its contents into eclipse with Ctrl+A and Ctrl+C in the file, and Ctrl+V in Eclipse.
 
 TO ADD THE JAR FILE REQUIRED FOR BARCLAY'S FUNCTIONALITY:
 1. Right click on your project and navigate: Build Path > Configure Build Path…
