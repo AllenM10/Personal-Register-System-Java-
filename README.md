@@ -14,7 +14,7 @@ Many functions have not been added yet or are still under development. However, 
 10. If the Console tab (where code output is shown) does not automatically appear, navigate on the topmost bar: Window > Show View > Console
 11. Open the "register.java" file and copy all of its contents into eclipse with Ctrl+A and Ctrl+C in the file, and Ctrl+V in Eclipse.
 
-    To add the JAR file required for Barclay's Data:
+    TO ADD THE JAR FILE REQUIRED FOR BARCLAY'S FUNCTIONALITY:
 1. Right click on your project and navigate: Build Path > Configure Build Path…
 2. Click on Classpath, then click “Add External JARs…”
 3. Navigate to the location of the "pdfbox-app-3.0.2.jar" file and select it.
