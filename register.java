@@ -191,7 +191,7 @@ public class register {
 					// Use the remainder of the string for the specification and amount spent or
 					// earned.
 					// Ex. "PAYPAL *WILDLIFESOS $70.00"
-					String remainder = lineScanner.nextLine();
+					String remainder = lineScanner.nextLine().substring(1);
 					int endingIndex = remainder.indexOf('$');
 					String specification = remainder.substring(0, endingIndex - 1);
 					specification = specification.replace(",", "");
@@ -302,6 +302,7 @@ public class register {
 		Boolean invalidPath = false;
 		File barclaysFile;
 		Scanner newFile;
+		Scanner yearFinder;
 
 		// Ask user for a file path to the input file.
 		do {
@@ -338,6 +339,19 @@ public class register {
 		PDDocument pdf = Loader.loadPDF(barclaysFile);
 		String newFileOutput = new PDFTextStripper().getText(pdf);// Collect a string containing all the lines of the
 																	// PDF document.
+		//Begin by finding the year of this sheet.
+		yearFinder = new Scanner(newFileOutput);
+		String year = null;
+		while(yearFinder.hasNext()) {
+			String curLine = yearFinder.next();
+			if(curLine.contains("/")) {//Find the line that looks like "06/04/24:"
+				year = "20" + curLine.substring(6,8);//Change "06/04/24:" to "2024."
+				break;
+			}
+		}//end while loop
+		yearFinder.close();
+		
+		//Find the rest of the variable dates and data.
 		newFile = new Scanner(newFileOutput);
 		while (newFile.hasNextLine()) {
 			String curLine = newFile.nextLine();
@@ -376,26 +390,33 @@ public class register {
 						month = "12";
 					String day = lineScanner.next();
 					day = day.replace(",", "");
-					String year = lineScanner.next();//FIXME: year will be the same for the whole file and is not listed in the entries.
+					lineScanner.next();//Skip posting month
+					lineScanner.next();//Skip posting day
 					String entryDate = month + "/" + day + "/" + year;
 					String description = "No Description"; // Barclay's does not offer a description.
 					// Use the remainder of the string for the specification and amount spent or
 					// earned.
 					// Ex. "PAYPAL *WILDLIFESOS $70.00"
-					String remainder = lineScanner.nextLine();
-					// System.out.println(remainder);//debugging
-					int endingIndex = remainder.indexOf('$');
-					String specification = remainder.substring(0, endingIndex - 1);//FIXME: program failing on entry that takes more than one line.
-					specification = specification.replace(",", "");
+					String remainder = lineScanner.nextLine().substring(1);
+					String specification = null;
+					if(remainder.contains("$")) {//The dollar sign is usually included in the first line.
+						int endingIndex = remainder.indexOf('$');
+						specification = remainder.substring(0, endingIndex - 1);
+					}
+					else {//If not, the dollar sign must otherwise be on the next two lines.
+						remainder = remainder + " " + newFile.nextLine() + " " + newFile.nextLine();
+						int endingIndex = remainder.indexOf('$');
+						specification = remainder.substring(0, endingIndex - 1);
+					}
+					specification = specification.replace(",", "");//Remove any commas in organization names.
 					Double earned = 0.0;
 					Double spent = 0.0;
-					if (remainder.contains("(") && remainder.contains(")")) {// Parentheses imply this transaction is a
-																				// deposit. FIXME: Deposit now designated with a negative, or "-$".
+					if (remainder.contains("-$")) {// "-$" implies this transaction is a deposit.
 						int moneyPosition = remainder.indexOf('$');
 						String amount = remainder.substring(moneyPosition + 1, remainder.length() - 1);
 						amount = amount.replace(",", "");
 						earned = Double.parseDouble(amount);
-					} else {
+					} else {// otherwise, this transaction is a withdrawal.
 						int moneyPosition = remainder.indexOf('$');
 						String amount = remainder.substring(moneyPosition + 1, remainder.length() - 1);
 						amount = amount.replace(",", "");
