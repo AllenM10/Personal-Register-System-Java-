@@ -3,7 +3,7 @@ Many functions have not been added yet or are still under development. However, 
 
 TO USE THIS PROGRAM:
 1. You must install Eclipse. If you already have Eclipse, skip this step. Otherwise, download the latest version of this IDE from the following link: [ https://www.eclipse.org/downloads/ ] (The option titled, "Install your favorite desktop IDE packages")
-2. Download all of the files in this repository by clicking on the green "Code" button on the main page, then clicking "Download ZIP"
+2. Download all of the files in this repository by clicking on the green "Code" button on the main page, then click "Download ZIP"
 3. Extract the ZIP wherever is convenient.
 4. Load into Eclipse and create a new project.
 5. To create a new Java project, navigate: File > New > Java Project.
