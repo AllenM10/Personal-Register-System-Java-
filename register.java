@@ -12,7 +12,7 @@ import java.util.Formatter;
 import java.util.Scanner;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument; 
+import org.apache.pdfbox.pdmodel.PDDocument;
 
 /*
  * CONVENTIONS
@@ -30,7 +30,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
  * or
  * choice = Double.parseDouble(userIn.nextLine());
  * 
- * 3. The comparator in and is the same.
+ * 3. The comparator used in LoadBarclaysAnnualData, LoadBarclaysMonthData and LoadNFData is the same.
  */
 
 public class register {
@@ -45,10 +45,10 @@ public class register {
 		// Starts the program.
 		File file = StartProgram(date, userIn);
 
-		//Let user know the program started normally.
+		// Let user know the program started normally.
 		PrintWhiteSpace();
 		System.out.println("File accessed successfully.");
-		
+
 		// STANDARD PROGRAM LOOP
 		Boolean programRunning = true;
 		do {
@@ -58,8 +58,9 @@ public class register {
 			System.out.println("2 - Lookup Data");
 			System.out.println("3 - Load file from Navy Federal");
 			System.out.println("4 - Load annual summary from Barclay's");
-			System.out.println("5 - Create backup");
-			System.out.println("6 - End program");
+			System.out.println("5 - Load monthly summary from Barclay's");
+			System.out.println("6 - Create backup");
+			System.out.println("7 - End program");
 			System.out.print("Your selection: ");
 			try {
 				choice = Integer.parseInt(userIn.nextLine());
@@ -79,15 +80,17 @@ public class register {
 				LoadNFData(file, userIn);
 				break;
 			case 4:
-				LoadBarclaysData(file, userIn);
+				LoadBarclaysAnnualData(file, userIn);
 				break;
 			case 5:
+				LoadBarclaysMonthlyData(file, userIn);
+			case 6:
 				CreateBackup(file, userIn);
 				break;
-			case 6:
+			case 7:
 				programRunning = false;
 				break;
-			}// end switch
+			}// end switch FIXME: Add a function to the register to calculate a percentage of earned income of a type from a specific date range.
 		} // end loop
 		while (programRunning);
 		// End program
@@ -97,7 +100,7 @@ public class register {
 	}// end main
 
 	// LOADS DATA FROM A BARCLAY'S PDF ANNUAL SUMMARY FILE.
-	public static void LoadBarclaysData(File file, Scanner userIn) throws IOException {
+	public static void LoadBarclaysAnnualData(File file, Scanner userIn) throws IOException {
 		// Variable declaration
 		Scanner baseFile = new Scanner(file);
 		String filePath = "";
@@ -113,18 +116,20 @@ public class register {
 		do {
 			invalidPath = false;
 			PrintWhiteSpace();
-			System.out.print("Enter the file path of the input file here (ex. C:\\Users\\Administrator\\Downloads\\Temporary\\Annual Summary): ");
+			System.out.print(
+					"Enter the file path of the input file here (ex. C:\\Users\\Administrator\\Downloads\\Temporary\\Annual Summary): ");
 			filePath = userIn.nextLine() + ".pdf";
-			//userIn.nextLine();
+			// userIn.nextLine();
 			barclaysFile = new File(filePath);
-			try {// Check to make sure the provided file path is valid and the loader is operational.
+			try {// Check to make sure the provided file path is valid and the loader is
+					// operational.
 				PDDocument pdf = Loader.loadPDF(barclaysFile);
 				new PDFTextStripper().getText(pdf);
 			} catch (FileNotFoundException f) {
 				PrintWhiteSpace();
 				System.out.println("The system cannot find the file specified. Please check the entered file path.");
 				invalidPath = true;
-			} catch (NoClassDefFoundError n) {//Indicates an issue with installed libraries.
+			} catch (NoClassDefFoundError n) {// Indicates an issue with installed libraries.
 				PrintWhiteSpace();
 				System.out.println("Critical error. Unable to call the PDF Loader.");
 				System.out.println("The system cannot run without Apache's PDFBox Library installed.");
@@ -140,63 +145,67 @@ public class register {
 		System.out.println(filePath);
 		System.out.println("to the current register.");
 		PDDocument pdf = Loader.loadPDF(barclaysFile);
-		String newFileOutput = new PDFTextStripper().getText(pdf);//Collect a string containing all the lines of the PDF document.
+		String newFileOutput = new PDFTextStripper().getText(pdf);// Collect a string containing all the lines of the
+																	// PDF document.
 		newFile = new Scanner(newFileOutput);
-		while(newFile.hasNextLine()) {
+		while (newFile.hasNextLine()) {
 			String curLine = newFile.nextLine();
-			if(curLine.length() > 2) {
+			if (curLine.length() > 2) {
 				String date = curLine.substring(0, 3);
-				if(date.equals("Jan") || date.equals("Feb") || date.equals("Mar") || date.equals("Apr") || date.equals("May") || date.equals("Jun") || date.equals("Jul") || date.equals("Aug") || date.equals("Sep") || date.equals("Oct") || date.equals("Nov") || date.equals("Dec")) {
+				if (date.equals("Jan") || date.equals("Feb") || date.equals("Mar") || date.equals("Apr")
+						|| date.equals("May") || date.equals("Jun") || date.equals("Jul") || date.equals("Aug")
+						|| date.equals("Sep") || date.equals("Oct") || date.equals("Nov") || date.equals("Dec")) {
 					Scanner lineScanner = new Scanner(curLine);
 					lineScanner.useDelimiter(" ");
-					//Decipher the date. Ex. "Dec 30, 2023"
+					// Decipher the date. Ex. "Dec 30, 2023"
 					String month = lineScanner.next();
-					if(month.equals("Jan"))
+					if (month.equals("Jan"))
 						month = "01";
-					else if(month.equals("Feb"))
+					else if (month.equals("Feb"))
 						month = "02";
-					else if(month.equals("Mar"))
+					else if (month.equals("Mar"))
 						month = "03";
-					else if(month.equals("Apr"))
+					else if (month.equals("Apr"))
 						month = "04";
-					else if(month.equals("May"))
+					else if (month.equals("May"))
 						month = "05";
-					else if(month.equals("Jun"))
+					else if (month.equals("Jun"))
 						month = "06";
-					else if(month.equals("Jul")) 
+					else if (month.equals("Jul"))
 						month = "07";
-					else if(month.equals("Aug")) 
+					else if (month.equals("Aug"))
 						month = "08";
-					else if(month.equals("Sep")) 
+					else if (month.equals("Sep"))
 						month = "09";
-					else if(month.equals("Oct"))
+					else if (month.equals("Oct"))
 						month = "10";
-					else if(month.equals("Nov"))
+					else if (month.equals("Nov"))
 						month = "11";
-					else if(month.equals("Dec"))
+					else if (month.equals("Dec"))
 						month = "12";
 					String day = lineScanner.next();
 					day = day.replace(",", "");
 					String year = lineScanner.next();
 					String entryDate = month + "/" + day + "/" + year;
 					String description = "No Description"; // Barclay's does not offer a description.
-					//Use the remainder of the string for the specification and amount spent or earned. 
-					//Ex. "PAYPAL *WILDLIFESOS $70.00"
+					// Use the remainder of the string for the specification and amount spent or
+					// earned.
+					// Ex. "PAYPAL *WILDLIFESOS $70.00"
 					String remainder = lineScanner.nextLine();
 					int endingIndex = remainder.indexOf('$');
-					String specification = remainder.substring(0,endingIndex-1);
+					String specification = remainder.substring(0, endingIndex - 1);
 					specification = specification.replace(",", "");
 					Double earned = 0.0;
 					Double spent = 0.0;
-					if(remainder.contains("(") && remainder.contains(")")) {// Parentheses imply this transaction is a deposit.
+					if (remainder.contains("(") && remainder.contains(")")) {// Parentheses imply this transaction is a
+																				// deposit.
 						int moneyPosition = remainder.indexOf('$');
-						String amount = remainder.substring(moneyPosition+1,remainder.length()-1);
+						String amount = remainder.substring(moneyPosition + 1, remainder.length() - 1);
 						amount = amount.replace(",", "");
 						earned = Double.parseDouble(amount);
-					}
-					else {
+					} else {
 						int moneyPosition = remainder.indexOf('$');
-						String amount = remainder.substring(moneyPosition+1,remainder.length()-1);
+						String amount = remainder.substring(moneyPosition + 1, remainder.length() - 1);
 						amount = amount.replace(",", "");
 						spent = Double.parseDouble(amount);
 					}
@@ -205,26 +214,26 @@ public class register {
 					lineScanner.close();
 				}
 			}
-		}//end while loop
+		} // end while loop
 		newFile.close();
 
 		// Load the existing file's data and close the file scanner.
 		baseFile.nextLine(); // Clear the first line (header) from the base file.
-		while (baseFile.hasNextLine()) {//Write every other line to an ArrayList.
+		while (baseFile.hasNextLine()) {// Write every other line to an ArrayList.
 			String curLine = baseFile.nextLine();
 			if (curLine.isEmpty() == false) {
 				existingData.add(curLine);
 			}
-		}//end while loop
+		} // end while loop
 		baseFile.close();
 
 		// Add all data to a single array list.
 		for (int i = 0; i < existingData.size(); i++) {
 			sortedDupeData.add(existingData.get(i));
-		}//end for loop
+		} // end for loop
 		for (int i = 0; i < inputData.size(); i++) {
 			sortedDupeData.add(inputData.get(i));
-		}//end for loop
+		} // end for loop
 
 		// Remove duplicates from the sorted list, if any.
 		for (int i = 0; i < sortedDupeData.size(); i++) {
@@ -237,59 +246,10 @@ public class register {
 			if (!sortedData.contains(noBalEntry)) {
 				sortedData.add(noBalEntry);
 			}
-		}//end for loop
+		} // end for loop
 
 		// Sort the array list by date.
-		sortedData.sort(new Comparator<String>() {
-			@Override
-			public int compare(String o1, String o2) {
-				DateTimeFormatter formatter = null;
-				String firstDate = o1.substring(0, 10);
-				String secondDate = o2.substring(0, 10);
-
-				// Analyze the format of the first date.
-				if (firstDate.substring(0, 3).matches("[0-9]+")) {//Check if the date begins with the year (2024-06-07)
-					formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-				} 
-				else if(firstDate.substring(6).matches("[0-9]+") == false && firstDate.charAt(9) != ',') {//Check if the year is represented with only two digits (05/17/24)
-					firstDate = firstDate.substring(0,7);
-					formatter = DateTimeFormatter.ofPattern("MM/dd/yy");
-				}
-				else if(firstDate.substring(3,5).matches("[0-9]+") == false) {//Check if the day is represented with only one digit (03/9/2023)
-					firstDate = firstDate.substring(0,9);//remove the trailing comma
-					//Add a zero before the day figure
-					String firstHalf = firstDate.substring(0,2);
-					String secondHalf = firstDate.substring(3);
-					firstDate = firstHalf + "/0" + secondHalf;
-					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-				}
-				else
-					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-				LocalDate firstRealDate = LocalDate.parse(firstDate, formatter);
-				// Analyze the format of the second date.
-				if (secondDate.substring(0, 3).matches("[0-9]+")) {//Check if the date begins with the year (2024-06-07)
-					formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-				}
-				else if(secondDate.substring(6).matches("[0-9]+") == false && secondDate.charAt(9) != ',') {//Check if the year is represented with only two digits (05/17/24)
-					secondDate = secondDate.substring(0,7);
-					formatter = DateTimeFormatter.ofPattern("MM/dd/yy");
-				}
-				else if(secondDate.substring(3,5).matches("[0-9]+") == false) {//Check if the day is represented with only one digit (03/9/2023)
-					secondDate = secondDate.substring(0,9);//remove the trailing comma
-					//Add a zero before the day figure
-					String firstHalf = secondDate.substring(0,2);
-					String secondHalf = secondDate.substring(3);
-					secondDate = firstHalf + "/0" + secondHalf;
-					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-				}
-				else
-					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-				LocalDate secondRealDate = LocalDate.parse(secondDate, formatter);
-
-				// Compare both dates.
-				return firstRealDate.compareTo(secondRealDate);
-			}
-		});
+		SortByDate(sortedData);
 
 		// Write the sorted data back to the base file.
 		// Overwrite all data in the base file.
@@ -297,16 +257,15 @@ public class register {
 		try {
 			FileWriter out = new FileWriter(file);
 			out.write("DATE,DESCRIPTION,SPECIFICATION,$ SPENT,$ EARNED,BALANCE");// Write the file header.
-			//Decipher the new balance as new entries are added.
+			// Decipher the new balance as new entries are added.
 			for (int i = 0; i < sortedData.size(); i++) {
 				String curLine = sortedData.get(i);
-				System.out.println(curLine);//debugging
 				Scanner lineScan = new Scanner(curLine);
 				lineScan.useDelimiter(",");
 				lineScan.next();// Skip date
 				lineScan.next();// Skip description
 				lineScan.next();// Skip specification
-				Double spent = lineScan.nextDouble();//FIXME: comma in organization name
+				Double spent = lineScan.nextDouble();// FIXME: comma in organization name
 				Double earned = lineScan.nextDouble();
 				balance -= spent;
 				balance += earned;
@@ -325,10 +284,272 @@ public class register {
 
 		// Take user back to the main menu.
 		PrintWhiteSpace();
-		System.out.print("Successfully loaded data into the selected register.\nPress any key to return to main menu: ");
+		System.out
+				.print("Successfully loaded data into the selected register.\nPress any key to return to main menu: ");
 		userIn.nextLine();
 		return;
-	}
+	}// End LoadBarclaysAnnualData
+
+	// LOADS DATA FROM A BARCLAY'S PDF MONTHLY SUMMARY FILE.
+	public static void LoadBarclaysMonthlyData(File file, Scanner userIn) throws IOException {
+		// Variable declaration
+		Scanner baseFile = new Scanner(file);
+		String filePath = "";
+		ArrayList<String> inputData = new ArrayList<>();
+		ArrayList<String> existingData = new ArrayList<>();
+		ArrayList<String> sortedDupeData = new ArrayList<>();
+		ArrayList<String> sortedData = new ArrayList<>();
+		Boolean invalidPath = false;
+		File barclaysFile;
+		Scanner newFile;
+
+		// Ask user for a file path to the input file.
+		do {
+			invalidPath = false;
+			PrintWhiteSpace();
+			System.out.print(
+					"Enter the file path of the input file here (ex. C:\\Users\\Administrator\\Downloads\\Temporary\\Barclay_June_2024): ");
+			filePath = userIn.nextLine() + ".pdf";
+			// userIn.nextLine();
+			barclaysFile = new File(filePath);
+			try {// Check to make sure the provided file path is valid and the loader is
+					// operational.
+				PDDocument pdf = Loader.loadPDF(barclaysFile);
+				new PDFTextStripper().getText(pdf);
+			} catch (FileNotFoundException f) {
+				PrintWhiteSpace();
+				System.out.println("The system cannot find the file specified. Please check the entered file path.");
+				invalidPath = true;
+			} catch (NoClassDefFoundError n) {// Indicates an issue with installed libraries.
+				PrintWhiteSpace();
+				System.out.println("Critical error. Unable to call the PDF Loader.");
+				System.out.println("The system cannot run without Apache's PDFBox Library installed.");
+				System.out.println("Only pdfbox-app-3.0.2.jar needs to be added as an external JAR file.");
+				System.out.println("https://pdfbox.apache.org/download.cgi");
+				System.exit(0);
+			}
+		} while (invalidPath);// Repeat previous steps if the path is invalid. End do while.
+
+		// Load the new file's data and close the file scanner.
+		PrintWhiteSpace();
+		System.out.println("Loading file data from");
+		System.out.println(filePath);
+		System.out.println("to the current register.");
+		PDDocument pdf = Loader.loadPDF(barclaysFile);
+		String newFileOutput = new PDFTextStripper().getText(pdf);// Collect a string containing all the lines of the
+																	// PDF document.
+		newFile = new Scanner(newFileOutput);
+		while (newFile.hasNextLine()) {
+			String curLine = newFile.nextLine();
+			if (curLine.length() > 2) {
+				String date = curLine.substring(0, 3);
+				if (date.equals("Jan") || date.equals("Feb") || date.equals("Mar") || date.equals("Apr")
+						|| date.equals("May") || date.equals("Jun") || date.equals("Jul") || date.equals("Aug")
+						|| date.equals("Sep") || date.equals("Oct") || date.equals("Nov") || date.equals("Dec")) {
+					Scanner lineScanner = new Scanner(curLine);
+					lineScanner.useDelimiter(" ");
+					// Decipher the date. Ex. "May 31 May 31" FIXME: record transaction date or posting date?
+					String month = lineScanner.next();
+					if (month.equals("Jan"))
+						month = "01";
+					else if (month.equals("Feb"))
+						month = "02";
+					else if (month.equals("Mar"))
+						month = "03";
+					else if (month.equals("Apr"))
+						month = "04";
+					else if (month.equals("May"))
+						month = "05";
+					else if (month.equals("Jun"))
+						month = "06";
+					else if (month.equals("Jul"))
+						month = "07";
+					else if (month.equals("Aug"))
+						month = "08";
+					else if (month.equals("Sep"))
+						month = "09";
+					else if (month.equals("Oct"))
+						month = "10";
+					else if (month.equals("Nov"))
+						month = "11";
+					else if (month.equals("Dec"))
+						month = "12";
+					String day = lineScanner.next();
+					day = day.replace(",", "");
+					String year = lineScanner.next();//FIXME: year will be the same for the whole file and is not listed in the entries.
+					String entryDate = month + "/" + day + "/" + year;
+					String description = "No Description"; // Barclay's does not offer a description.
+					// Use the remainder of the string for the specification and amount spent or
+					// earned.
+					// Ex. "PAYPAL *WILDLIFESOS $70.00"
+					String remainder = lineScanner.nextLine();
+					// System.out.println(remainder);//debugging
+					int endingIndex = remainder.indexOf('$');
+					String specification = remainder.substring(0, endingIndex - 1);//FIXME: program failing on entry that takes more than one line.
+					specification = specification.replace(",", "");
+					Double earned = 0.0;
+					Double spent = 0.0;
+					if (remainder.contains("(") && remainder.contains(")")) {// Parentheses imply this transaction is a
+																				// deposit. FIXME: Deposit now designated with a negative, or "-$".
+						int moneyPosition = remainder.indexOf('$');
+						String amount = remainder.substring(moneyPosition + 1, remainder.length() - 1);
+						amount = amount.replace(",", "");
+						earned = Double.parseDouble(amount);
+					} else {
+						int moneyPosition = remainder.indexOf('$');
+						String amount = remainder.substring(moneyPosition + 1, remainder.length() - 1);
+						amount = amount.replace(",", "");
+						spent = Double.parseDouble(amount);
+					}
+					String entry = entryDate + "," + description + "," + specification + "," + spent + "," + earned;
+					inputData.add(entry);
+					lineScanner.close();
+				}
+			}
+		} // end while loop
+		newFile.close();
+
+		// Load the existing file's data and close the file scanner.
+		baseFile.nextLine(); // Clear the first line (header) from the base file.
+		while (baseFile.hasNextLine()) {// Write every other line to an ArrayList.
+			String curLine = baseFile.nextLine();
+			if (curLine.isEmpty() == false) {
+				existingData.add(curLine);
+			}
+		} // end while loop
+		baseFile.close();
+
+		// Add all data to a single array list.
+		for (int i = 0; i < existingData.size(); i++) {
+			sortedDupeData.add(existingData.get(i));
+		} // end for loop
+		for (int i = 0; i < inputData.size(); i++) {
+			sortedDupeData.add(inputData.get(i));
+		} // end for loop
+
+		// Remove duplicates from the sorted list, if any.
+		for (int i = 0; i < sortedDupeData.size(); i++) {
+			String balEntry = sortedDupeData.get(i);
+			Scanner curLine = new Scanner(balEntry);
+			curLine.useDelimiter(",");
+			String noBalEntry = curLine.next() + "," + curLine.next() + "," + curLine.next() + "," + curLine.next()
+					+ "," + curLine.next();// Add every field but balance
+			curLine.close();
+			if (!sortedData.contains(noBalEntry)) {
+				sortedData.add(noBalEntry);
+			}
+		} // end for loop
+
+		// Sort the ArrayList by date.
+		SortByDate(sortedData);
+
+		// Write the sorted data back to the base file.
+		// Overwrite all data in the base file.
+		Double balance = 0.0;
+		try {
+			FileWriter out = new FileWriter(file);
+			out.write("DATE,DESCRIPTION,SPECIFICATION,$ SPENT,$ EARNED,BALANCE");// Write the file header.
+			// Decipher the new balance as new entries are added.
+			for (int i = 0; i < sortedData.size(); i++) {
+				String curLine = sortedData.get(i);
+				Scanner lineScan = new Scanner(curLine);
+				lineScan.useDelimiter(",");
+				lineScan.next();// Skip date
+				lineScan.next();// Skip description
+				lineScan.next();// Skip specification
+				Double spent = lineScan.nextDouble();// FIXME: comma in organization name
+				Double earned = lineScan.nextDouble();
+				balance -= spent;
+				balance += earned;
+				lineScan.close();
+				out.write("\n");
+				out.write(curLine + "," + balance);
+			}
+			out.close();
+		} catch (FileNotFoundException e) {
+			PrintWhiteSpace();
+			System.out.println("Unable to write to the output file. Make sure it isn't open!");
+			System.out.print("Press any key to return to main menu: ");
+			userIn.nextLine();
+			return;
+		}
+		// Take user back to the main menu.
+		PrintWhiteSpace();
+		System.out
+				.print("Successfully loaded data into the selected register.\nPress any key to return to main menu: ");
+		userIn.nextLine();
+		return;
+	}// end LoadBarclaysMonthData
+
+	// SORTS AN ARRAYLIST OF ENTRIES BY THIER DATES.
+	private static void SortByDate(ArrayList<String> sortedData) {
+		sortedData.sort(new Comparator<String>() {
+			@Override
+			public int compare(String o1, String o2) {
+				DateTimeFormatter formatter = null;
+				String firstDate = o1.substring(0, 10);
+				String secondDate = o2.substring(0, 10);
+
+				// Analyze the format of the first date.
+				if (firstDate.substring(0, 3).matches("[0-9]+")) {// Check if the date begins with the year (2024-06-07)
+					formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+				} else if (firstDate.substring(6).matches("[0-9]+") == false && firstDate.charAt(9) != ',') {// Check if
+																												// the
+																												// year
+																												// is
+																												// represented
+																												// with
+																												// only
+																												// two
+																												// digits
+																												// (05/17/24)
+					firstDate = firstDate.substring(0, 7);
+					formatter = DateTimeFormatter.ofPattern("MM/dd/yy");
+				} else if (firstDate.substring(3, 5).matches("[0-9]+") == false) {// Check if the day is represented
+																					// with only one digit (03/9/2023)
+					firstDate = firstDate.substring(0, 9);// remove the trailing comma
+					// Add a zero before the day figure
+					String firstHalf = firstDate.substring(0, 2);
+					String secondHalf = firstDate.substring(3);
+					firstDate = firstHalf + "/0" + secondHalf;
+					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+				} else
+					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+				LocalDate firstRealDate = LocalDate.parse(firstDate, formatter);
+				// Analyze the format of the second date.
+				if (secondDate.substring(0, 3).matches("[0-9]+")) {// Check if the date begins with the year
+																	// (2024-06-07)
+					formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+				} else if (secondDate.substring(6).matches("[0-9]+") == false && secondDate.charAt(9) != ',') {// Check
+																												// if
+																												// the
+																												// year
+																												// is
+																												// represented
+																												// with
+																												// only
+																												// two
+																												// digits
+																												// (05/17/24)
+					secondDate = secondDate.substring(0, 7);
+					formatter = DateTimeFormatter.ofPattern("MM/dd/yy");
+				} else if (secondDate.substring(3, 5).matches("[0-9]+") == false) {// Check if the day is represented
+																					// with only one digit (03/9/2023)
+					secondDate = secondDate.substring(0, 9);// remove the trailing comma
+					// Add a zero before the day figure
+					String firstHalf = secondDate.substring(0, 2);
+					String secondHalf = secondDate.substring(3);
+					secondDate = firstHalf + "/0" + secondHalf;
+					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+				} else
+					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+				LocalDate secondRealDate = LocalDate.parse(secondDate, formatter);
+
+				// Compare both dates.
+				return firstRealDate.compareTo(secondRealDate);
+			}
+		});
+	}// end SortByDate
 
 	// PERFORMS STANDARD PROGRAM STARTUP. TRIGGERS VerifyFile().
 	public static File StartProgram(String date, Scanner userIn) throws IOException {
@@ -360,7 +581,7 @@ public class register {
 			System.out.println(
 					"No file path is saved in memory. Please enter a file path and name at which to output the register file.");
 			System.out.print("(ex. C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses): ");
-			String userInFile = userIn.nextLine() + ".csv";
+			String userInFile = userIn.nextLine() + ".csv";// FIXME: validate this path before saving it to memory.
 			FileWriter out = new FileWriter(pathsMemoryFile, true);
 			out.write(userInFile);
 			out.close();
@@ -387,7 +608,7 @@ public class register {
 					"Alternatively, add a new file path by typing 'Add', or remove a file path by typing 'Remove'.");
 			System.out.print("Your selection: ");
 			userEntry = userIn.nextLine();
-			if (userEntry.equals("Add")) {// If user adds a memory path.
+			if (userEntry.equals("Add") || userEntry.equals("add")) {// If user adds a memory path.
 				PrintWhiteSpace();
 				System.out.println("Please enter a file path and name to output the document.");
 				System.out
@@ -398,8 +619,8 @@ public class register {
 				out.write(userInFile + ".csv");
 				out.close();
 
-				// Advise the user that the path is added and exit the program to update the
-				// list.
+				// Advise the user that the path is added and
+				// exit the program to update the list.
 				PrintWhiteSpace();
 				System.out.println("Path saved to memory file. Please reload this program to access the new path.");
 				System.exit(0);
@@ -424,8 +645,8 @@ public class register {
 				out.close();
 				removeScan.close();
 
-				// Advise the user that the path is removed and exit the program to update the
-				// list.
+				// Advise the user that the path is removed and
+				// exit the program to update the list.
 				PrintWhiteSpace();
 				System.out.println(
 						"Path removed from memory file. Keep in mind that this action did not delete the file.\nPlease reload this program to continue.");
@@ -541,17 +762,17 @@ public class register {
 				earned = amount;
 			entry = entry + "," + description + "," + specification + "," + spent + "," + earned;
 			inputData.add(entry);
-		}//end while loop
+		} // end while loop
 		newFile.close();
 
 		// Load the existing file's data and close the file.
 		baseFile.nextLine(); // Clear the first line (header) from the base file.
-		while (baseFile.hasNextLine()) {//Add every other line to an ArrayList.
+		while (baseFile.hasNextLine()) {// Add every other line to an ArrayList.
 			String curLine = baseFile.nextLine();
 			if (curLine.isEmpty() == false) {
 				existingData.add(curLine);
 			}
-		}//end while
+		} // end while
 		baseFile.close();
 
 		// Add all data to a single array list.
@@ -575,57 +796,8 @@ public class register {
 			}
 		}
 
-		sortedData.sort(new Comparator<String>() {
-			@Override
-			public int compare(String o1, String o2) {
-				DateTimeFormatter formatter = null;
-				String firstDate = o1.substring(0, 10);
-				String secondDate = o2.substring(0, 10);
-
-				// Analyze the format of the first date.
-				if (firstDate.substring(0, 3).matches("[0-9]+")) {//Check if the date begins with the year (2024-06-07)
-					formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-				} 
-				else if(firstDate.substring(6).matches("[0-9]+") == false && firstDate.charAt(9) != ',') {//Check if the year is represented with only two digits (05/17/24)
-					firstDate = firstDate.substring(0,7);
-					formatter = DateTimeFormatter.ofPattern("MM/dd/yy");
-				}
-				else if(firstDate.substring(3,5).matches("[0-9]+") == false) {//Check if the day is represented with only one digit (03/9/2023)
-					firstDate = firstDate.substring(0,9);//remove the trailing comma
-					//Add a zero before the day figure
-					String firstHalf = firstDate.substring(0,2);
-					String secondHalf = firstDate.substring(3);
-					firstDate = firstHalf + "/0" + secondHalf;
-					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-				}
-				else
-					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-				LocalDate firstRealDate = LocalDate.parse(firstDate, formatter);
-				// Analyze the format of the second date.
-				if (secondDate.substring(0, 3).matches("[0-9]+")) {//Check if the date begins with the year (2024-06-07)
-					formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-				}
-				else if(secondDate.substring(6).matches("[0-9]+") == false && secondDate.charAt(9) != ',') {//Check if the year is represented with only two digits (05/17/24)
-					secondDate = secondDate.substring(0,7);
-					formatter = DateTimeFormatter.ofPattern("MM/dd/yy");
-				}
-				else if(secondDate.substring(3,5).matches("[0-9]+") == false) {//Check if the day is represented with only one digit (03/9/2023)
-					secondDate = secondDate.substring(0,9);//remove the trailing comma
-					//Add a zero before the day figure
-					String firstHalf = secondDate.substring(0,2);
-					String secondHalf = secondDate.substring(3);
-					secondDate = firstHalf + "/0" + secondHalf;
-					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-				}
-				else
-					formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-				LocalDate secondRealDate = LocalDate.parse(secondDate, formatter);
-
-				// Compare both dates.
-				return firstRealDate.compareTo(secondRealDate);
-			}
-		});
-
+		// Sort the ArrayList by date.
+		SortByDate(sortedData);
 
 		// Write the sorted data back to the base file; overwrite all data in the base
 		// file.
@@ -633,7 +805,7 @@ public class register {
 		try {
 			FileWriter out = new FileWriter(file);
 			out.write("DATE,DESCRIPTION,SPECIFICATION,$ SPENT,$ EARNED,BALANCE");// Write the file header.
-			//Decipher the new balance as new entries are added.
+			// Decipher the new balance as new entries are added.
 			for (int i = 0; i < sortedData.size(); i++) {
 				String curLine = sortedData.get(i);
 				Scanner lineScan = new Scanner(curLine);
@@ -719,7 +891,8 @@ public class register {
 		} catch (FileNotFoundException e) {
 			PrintWhiteSpace();
 			System.out.println("No file yet exists at " + filePath);
-			System.out.print("Creating a new register file. Would you like to change the file path or name? [Yes/No]: ");
+			System.out
+					.print("Creating a new register file. Would you like to change the file path or name? [Yes/No]: ");
 			String answer = userIn.nextLine();
 			// Ask the user if they would like to specify a new file path and name.
 			if (answer.equals("Yes")) {
@@ -813,22 +986,22 @@ public class register {
 			in = new Scanner(file);
 			while (in.hasNextLine()) {
 				String curLine = in.nextLine();
-				if (curLine.length() > 5) {// Only add non-empty rows. //FIXME: why 5? 
+				if (curLine.length() > 5) {// Only add non-empty rows. //FIXME: why 5?
 					validRows.add(curLine);
 				}
 			} // end while loop
-			
+
 			lastLine = new Scanner(validRows.get(validRows.size() - 1));// Scan the last line.
 			lastLine.useDelimiter(",");
 
 			// Find the current balance of the account from the last line.
 			for (int i = 0; i < 5; i++) {// Scroll to the balance column of the last entry.
 				lastLine.next();
-			}//end for loop
-			try {//Ensure the last line is formatted properly; remove the ", " and then attempt to parse it as a Double.
+			} // end for loop
+			try {// Ensure the last line is formatted properly; remove the ", " and then attempt
+					// to parse it as a Double.
 				curBalance = Double.parseDouble(lastLine.nextLine().substring(1));
-			}
-			catch (NumberFormatException n) {
+			} catch (NumberFormatException n) {
 				PrintWhiteSpace();
 				System.out.println("Unable to properly read the final line of the document.");
 				System.out.println("Please ensure the balance figure of the final line is formatted appropriately.");
@@ -903,7 +1076,7 @@ public class register {
 				System.exit(0);
 			}
 			balFormat = new Formatter();
-			
+
 			PrintWhiteSpace();
 			System.out.println(
 					"Entry saved. The new balance of the account is: $" + balFormat.format("%.2f", curBalance) + ".");
@@ -994,7 +1167,8 @@ public class register {
 					if (date.isEmpty()) {
 						break;
 					}
-					arr.add(line.next() + "," + line.next() + "," + line.next() + "," + line.next() + "," + line.next());
+					arr.add(line.next() + "," + line.next() + "," + line.next() + "," + line.next() + ","
+							+ line.next());
 					line.close();
 				} else {
 					in.nextLine();
