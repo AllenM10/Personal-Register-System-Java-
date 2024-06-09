@@ -90,7 +90,8 @@ public class register {
 			case 7:
 				programRunning = false;
 				break;
-			}// end switch FIXME: Add a function to the register to calculate a percentage of earned income of a type from a specific date range.
+			}// end switch FIXME: Add a function to the register to calculate a percentage of
+				// earned income of a type from a specific date range.
 		} // end loop
 		while (programRunning);
 		// End program
@@ -265,7 +266,7 @@ public class register {
 				lineScan.next();// Skip date
 				lineScan.next();// Skip description
 				lineScan.next();// Skip specification
-				Double spent = lineScan.nextDouble();// FIXME: comma in organization name
+				Double spent = lineScan.nextDouble();
 				Double earned = lineScan.nextDouble();
 				balance -= spent;
 				balance += earned;
@@ -339,19 +340,19 @@ public class register {
 		PDDocument pdf = Loader.loadPDF(barclaysFile);
 		String newFileOutput = new PDFTextStripper().getText(pdf);// Collect a string containing all the lines of the
 																	// PDF document.
-		//Begin by finding the year of this sheet.
+		// Begin by finding the year of this sheet.
 		yearFinder = new Scanner(newFileOutput);
 		String year = null;
-		while(yearFinder.hasNext()) {
+		while (yearFinder.hasNext()) {
 			String curLine = yearFinder.next();
-			if(curLine.contains("/")) {//Find the line that looks like "06/04/24:"
-				year = "20" + curLine.substring(6,8);//Change "06/04/24:" to "2024."
+			if (curLine.contains("/")) {// Find the line that looks like "06/04/24:"
+				year = "20" + curLine.substring(6, 8);// Change "06/04/24:" to "2024."
 				break;
 			}
-		}//end while loop
+		} // end while loop
 		yearFinder.close();
-		
-		//Find the rest of the variable dates and data.
+
+		// Find the rest of the variable dates and data.
 		newFile = new Scanner(newFileOutput);
 		while (newFile.hasNextLine()) {
 			String curLine = newFile.nextLine();
@@ -362,7 +363,7 @@ public class register {
 						|| date.equals("Sep") || date.equals("Oct") || date.equals("Nov") || date.equals("Dec")) {
 					Scanner lineScanner = new Scanner(curLine);
 					lineScanner.useDelimiter(" ");
-					// Decipher the date. Ex. "May 31 May 31" FIXME: record transaction date or posting date?
+					// Decipher the date. Ex. "May 31 May 31"
 					String month = lineScanner.next();
 					if (month.equals("Jan"))
 						month = "01";
@@ -390,8 +391,8 @@ public class register {
 						month = "12";
 					String day = lineScanner.next();
 					day = day.replace(",", "");
-					lineScanner.next();//Skip posting month
-					lineScanner.next();//Skip posting day
+					lineScanner.next();// Skip posting month
+					lineScanner.next();// Skip posting day
 					String entryDate = month + "/" + day + "/" + year;
 					String description = "No Description"; // Barclay's does not offer a description.
 					// Use the remainder of the string for the specification and amount spent or
@@ -399,16 +400,15 @@ public class register {
 					// Ex. "PAYPAL *WILDLIFESOS $70.00"
 					String remainder = lineScanner.nextLine().substring(1);
 					String specification = null;
-					if(remainder.contains("$")) {//The dollar sign is usually included in the first line.
+					if (remainder.contains("$")) {// The dollar sign is usually included in the first line.
 						int endingIndex = remainder.indexOf('$');
 						specification = remainder.substring(0, endingIndex - 1);
-					}
-					else {//If not, the dollar sign must otherwise be on the next two lines.
+					} else {// If not, the dollar sign must otherwise be on the next two lines.
 						remainder = remainder + " " + newFile.nextLine() + " " + newFile.nextLine();
 						int endingIndex = remainder.indexOf('$');
 						specification = remainder.substring(0, endingIndex - 1);
 					}
-					specification = specification.replace(",", "");//Remove any commas in organization names.
+					specification = specification.replace(",", "");// Remove any commas in organization names.
 					Double earned = 0.0;
 					Double spent = 0.0;
 					if (remainder.contains("-$")) {// "-$" implies this transaction is a deposit.
@@ -478,7 +478,7 @@ public class register {
 				lineScan.next();// Skip date
 				lineScan.next();// Skip description
 				lineScan.next();// Skip specification
-				Double spent = lineScan.nextDouble();// FIXME: comma in organization name
+				Double spent = lineScan.nextDouble();
 				Double earned = lineScan.nextDouble();
 				balance -= spent;
 				balance += earned;
@@ -598,13 +598,33 @@ public class register {
 		// Find saved file paths.
 		memoryScan = new Scanner(pathsMemoryFile);
 		if (memoryScan.hasNextLine() == false) {// If none exist, prompt the user to create one.
-			PrintWhiteSpace();
-			System.out.println(
-					"No file path is saved in memory. Please enter a file path and name at which to output the register file.");
-			System.out.print("(ex. C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses): ");
-			String userInFile = userIn.nextLine() + ".csv";// FIXME: validate this path before saving it to memory.
+			System.out.println("No file path is saved in memory.");
+
+			// Prompt the user to enter a file path. If invalid, prompt again.
+			Boolean invalidPath = true;
+			String userInFilePath = null;
+			do {
+				PrintWhiteSpace();
+				System.out.println("Please enter a file path and name at which to output the register file.");
+				System.out.println(
+						"Alternatively, enter only the file name to place the file in the Eclipse Workspace directory.");
+				System.out
+						.print("(ex. C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses): ");
+				userInFilePath = userIn.nextLine() + ".csv";
+				File testFile = new File(userInFilePath);
+				try {
+					FileWriter out = new FileWriter(testFile);
+					out.close();
+				} catch (FileNotFoundException f) {
+					PrintWhiteSpace();
+					System.out.println("Please enter a valid file path!");
+					continue;
+				}
+
+				invalidPath = false;
+			} while (invalidPath); // end while loop
 			FileWriter out = new FileWriter(pathsMemoryFile, true);
-			out.write(userInFile);
+			out.write(userInFilePath);
 			out.close();
 			PrintWhiteSpace();
 			System.out.println("Path saved to memory file. Please reload this program to access the new path.");
@@ -630,14 +650,31 @@ public class register {
 			System.out.print("Your selection: ");
 			userEntry = userIn.nextLine();
 			if (userEntry.equals("Add") || userEntry.equals("add")) {// If user adds a memory path.
-				PrintWhiteSpace();
-				System.out.println("Please enter a file path and name to output the document.");
-				System.out
-						.print("(ex. C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses): ");
-				String userInFile = userIn.nextLine();
+				String userInFilePath;
+				Boolean invalidPath = true;
+				do {
+					PrintWhiteSpace();
+					System.out.println("Please enter a file path and name at which to output the register file.");
+					System.out.println(
+							"Alternatively, enter only the file name to place the file in the Eclipse Workspace directory.");
+					System.out
+							.print("(ex. C:\\Users\\Administrator\\Documents\\Official Documents\\Income and Expenses): ");
+					userInFilePath = userIn.nextLine() + ".csv";
+					File testFile = new File(userInFilePath);
+					try {
+						FileWriter out = new FileWriter(testFile);
+						out.close();
+					} catch (FileNotFoundException f) {
+						PrintWhiteSpace();
+						System.out.println("Please enter a valid file path!");
+						continue;
+					}
+
+					invalidPath = false;
+				} while (invalidPath); // end while loop
 				FileWriter out = new FileWriter(pathsMemoryFile, true);
 				out.write("\n");
-				out.write(userInFile + ".csv");
+				out.write(userInFilePath);
 				out.close();
 
 				// Advise the user that the path is added and
@@ -646,7 +683,7 @@ public class register {
 				System.out.println("Path saved to memory file. Please reload this program to access the new path.");
 				System.exit(0);
 			}
-			if (userEntry.equals("Remove")) {// If user removes a remembered path.
+			if (userEntry.equals("Remove") || userEntry.equals("remove")) {// If user removes a remembered path.
 				PrintWhiteSpace();
 				System.out.println("Please enter the name and file path to remove.");
 				System.out.print("(ex. " + filePaths.get(0) + "): ");
@@ -658,11 +695,11 @@ public class register {
 					if (!currLine.equals(fileToRemove)) {
 						newList.add(currLine);
 					}
-				}
+				} // end while loop
 				FileWriter out = new FileWriter(pathsMemoryFile);
 				for (int i = 0; i < newList.size(); i++) {
 					out.write(newList.get(i));
-				}
+				} // end for loop
 				out.close();
 				removeScan.close();
 
@@ -670,7 +707,8 @@ public class register {
 				// exit the program to update the list.
 				PrintWhiteSpace();
 				System.out.println(
-						"Path removed from memory file. Keep in mind that this action did not delete the file.\nPlease reload this program to continue.");
+						"Path removed from memory file. Keep in mind that this action did not delete the file.");
+				System.out.println("Please reload this program to continue.");
 				System.exit(0);
 			}
 
@@ -688,7 +726,7 @@ public class register {
 				System.out.println("Invalid choice. Please enter a number or type 'Add'.");
 				invalidChoice = true;
 			}
-		} while (invalidChoice);// end dowhile loop
+		} while (invalidChoice);// end do while loop
 
 		File file = new File(filePath);
 
@@ -698,6 +736,7 @@ public class register {
 		// Return the desired file and begin the program.
 		return file;
 	}// end StartProgram
+	// TESTS IF A FILE PATH IS VALID.
 
 	// LOADS DATA FROM A NAVY FEDERAL .csv FILE.
 	public static void LoadNFData(File file, Scanner userIn) throws IOException {
@@ -810,7 +849,7 @@ public class register {
 			Scanner curLine = new Scanner(balEntry);
 			curLine.useDelimiter(",");
 			String noBalEntry = curLine.next() + "," + curLine.next() + "," + curLine.next() + "," + curLine.next()
-					+ "," + curLine.next();// Add every field but balance //FIXME: NoSuchElementException
+					+ "," + curLine.next();// Add every field but balance
 			curLine.close();
 			if (!sortedData.contains(noBalEntry)) {
 				sortedData.add(noBalEntry);
@@ -1007,7 +1046,7 @@ public class register {
 			in = new Scanner(file);
 			while (in.hasNextLine()) {
 				String curLine = in.nextLine();
-				if (curLine.length() > 5) {// Only add non-empty rows. //FIXME: why 5?
+				if (curLine.length() > 5) {// Only add non-empty rows.
 					validRows.add(curLine);
 				}
 			} // end while loop
@@ -1036,9 +1075,9 @@ public class register {
 					+ balFormat.format("%.2f", curBalance) + ".");
 			balFormat.close();
 
-			// Gather user data; present list of existing general descriptions. //FIXME Data
-			// not writing to file?
-			System.out.print("Please enter a one-word description of the change.");
+			// Gather user data; present list of existing general descriptions. 
+			// FIXME Data not writing to file?
+			System.out.print("Please enter a description of the change.");
 			Scanner descScanner = new Scanner(descsMemoryFile);
 			if (descScanner.hasNextLine()) {// Print out saved descriptions
 				System.out.println("Existing descriptions are: ");
